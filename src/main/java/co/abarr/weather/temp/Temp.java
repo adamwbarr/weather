@@ -6,13 +6,13 @@ import java.util.Objects;
  * Created by adam on 30/11/2020.
  */
 public final class Temp extends Number {
-    private final double value;
+    private final float value;
     private final TempUnits units;
 
-    private Temp(double value, TempUnits units) {
+    private Temp(float value, TempUnits units) {
         this.value = value;
         this.units = Objects.requireNonNull(units);
-        if (!Double.isFinite(value)) {
+        if (!Float.isFinite(value)) {
             throw new IllegalArgumentException("Invalid temp: " + this);
         }
     }
@@ -38,7 +38,7 @@ public final class Temp extends Number {
      */
     @Override
     public float floatValue() {
-        return (float) value;
+        return value;
     }
 
     /**
@@ -47,6 +47,24 @@ public final class Temp extends Number {
     @Override
     public double doubleValue() {
         return value;
+    }
+
+    /**
+     * Converts this temperature to Kelvins.
+     */
+    public Temp toKelvin() {
+        return to(TempUnits.KELVIN);
+    }
+
+    /**
+     * Converts this temperature to the supplied units.
+     */
+    public Temp to(TempUnits units) {
+        if (this.units == units) {
+            return this;
+        } else {
+            throw new UnsupportedOperationException("TODO");
+        }
     }
 
     @Override
@@ -83,6 +101,25 @@ public final class Temp extends Number {
      * units are null.
      */
     public static Temp of(double value, TempUnits units) {
+        return of((float) value, units);
+    }
+
+    /**
+     * Creates a new Kelvin temperature.
+     * <p>
+     * An exception will be thrown if the value is NaN or infinite.
+     */
+    public static Temp kelvin(float value) {
+        return of(value, TempUnits.KELVIN);
+    }
+
+    /**
+     * Creates a new temperature.
+     * <p>
+     * An exception will be thrown if the value is NaN or infinite, or the
+     * units are null.
+     */
+    public static Temp of(float value, TempUnits units) {
         return new Temp(value, units);
     }
 }

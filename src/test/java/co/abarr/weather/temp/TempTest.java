@@ -43,4 +43,10 @@ class TempTest {
         Temp temp2 = Temp.kelvin(150);
         assertThat(temp1).isNotEqualTo(temp2);
     }
+
+    @Test
+    void to_SameUnits_ShouldReturnSelf() {
+        Temp temp = Temp.kelvin(120);
+        assertThat(temp.toKelvin()).isEqualTo(temp);
+    }
 }

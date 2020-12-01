@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * An entry from an OpenWeatherMap bulk download.
+ * An row from an OpenWeatherMap bulk download.
  * <p>
  * Created by adam on 30/11/2020.
  */
