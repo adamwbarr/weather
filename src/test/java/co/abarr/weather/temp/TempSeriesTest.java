@@ -68,4 +68,19 @@ class TempSeriesTest {
         );
         assertThat(series.get(1)).isEqualTo(TempSeries.Entry.of(date2, Temp.kelvin(281)));
     }
+
+    @Test
+    void mean_OfEmptySeries_ShouldNotExist() {
+        TempSeries series = TempSeries.empty();
+        assertThat(series.mean()).isEmpty();
+    }
+
+    @Test
+    void mean_OfNonEmptySeries_ShouldBeCorrect() {
+        TempSeries series = TempSeries.of(
+            TempSeries.Entry.of(date1, Temp.kelvin(280)),
+            TempSeries.Entry.of(date2, Temp.kelvin(281))
+        );
+        assertThat(series.mean()).contains(Temp.kelvin(280.5));
+    }
 }

@@ -1,7 +1,10 @@
 package co.abarr.weather.temp;
 
+import co.abarr.weather.time.DateRange;
+
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * A ordered list of contiguous dates and their associated temperatures.
@@ -37,6 +40,21 @@ public final class TempSeries extends AbstractList<TempSeries.Entry> {
     @Override
     public int size() {
         return temps.length;
+    }
+
+    /**
+     * The mean of the series, if there is one.
+     */
+    public Optional<Temp> mean() {
+        if (isEmpty()) {
+            return Optional.empty();
+        } else {
+            float sum = 0;
+            for (float temp : temps) {
+                sum += temp;
+            }
+            return Optional.of(Temp.kelvin(sum / temps.length));
+        }
     }
 
     /**
@@ -117,6 +135,17 @@ public final class TempSeries extends AbstractList<TempSeries.Entry> {
         List<Entry> entries = new ArrayList<>(map.size());
         for (Map.Entry<LocalDate, Temp> entry : map.entrySet()) {
             entries.add(Entry.of(entry.getKey(), entry.getValue()));
+        }
+        return of(entries);
+    }
+
+    /**
+     * Creates a series containing the supplied dates.
+     */
+    public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
+        List<Entry> entries = new ArrayList<>();
+        for (LocalDate date : dates.all()) {
+            entries.add(Entry.of(date, temp.apply(date)));
         }
         return of(entries);
     }
