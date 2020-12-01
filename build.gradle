@@ -4,6 +4,7 @@ plugins {
 
 group "co.abarr"
 version "1.0-SNAPSHOT"
+sourceCompatibility = "15"
 
 repositories {
     mavenCentral()
