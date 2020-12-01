@@ -11,18 +11,30 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Created by adam on 01/12/2020.
  */
 class TempSeriesTest {
+    private final LocalDate date1 = LocalDate.parse("2020-01-01");
+    private final LocalDate date3 = LocalDate.parse("2020-01-03");
+    private final LocalDate date2 = LocalDate.parse("2020-01-02");
+
     @Test
     void of_DuplicateEntries_ShouldThrowException() {
-        TempSeries.Entry entry1 = TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280));
-        TempSeries.Entry entry2 = TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(281));
+        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
+        TempSeries.Entry entry2 = TempSeries.Entry.of(date1, Temp.kelvin(281));
         assertThatThrownBy(() -> TempSeries.of(entry1, entry2)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void of_MissingDates_ShouldThrowException() {
-        TempSeries.Entry entry1 = TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280));
-        TempSeries.Entry entry2 = TempSeries.Entry.of(LocalDate.parse("2020-01-03"), Temp.kelvin(281));
+        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
+        TempSeries.Entry entry2 = TempSeries.Entry.of(date3, Temp.kelvin(281));
         assertThatThrownBy(() -> TempSeries.of(entry1, entry2)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void of_UnorderedEntries_ShouldOrderByDate() {
+        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
+        TempSeries.Entry entry2 = TempSeries.Entry.of(date2, Temp.kelvin(281));
+        TempSeries series = TempSeries.of(entry2, entry1);
+        assertThat(series).containsExactly(entry1, entry2);
     }
 
     @Test
@@ -33,8 +45,8 @@ class TempSeriesTest {
     @Test
     void size_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280)),
-            TempSeries.Entry.of(LocalDate.parse("2020-01-02"), Temp.kelvin(281))
+            TempSeries.Entry.of(date1, Temp.kelvin(280)),
+            TempSeries.Entry.of(date2, Temp.kelvin(281))
         );
         assertThat(series).hasSize(2);
     }
@@ -42,18 +54,18 @@ class TempSeriesTest {
     @Test
     void get_OfFirstEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280)),
-            TempSeries.Entry.of(LocalDate.parse("2020-01-02"), Temp.kelvin(281))
+            TempSeries.Entry.of(date1, Temp.kelvin(280)),
+            TempSeries.Entry.of(date2, Temp.kelvin(281))
         );
-        assertThat(series.get(0)).isEqualTo(TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280)));
+        assertThat(series.get(0)).isEqualTo(TempSeries.Entry.of(date1, Temp.kelvin(280)));
     }
 
     @Test
     void get_OfSubsequentEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(LocalDate.parse("2020-01-01"), Temp.kelvin(280)),
-            TempSeries.Entry.of(LocalDate.parse("2020-01-02"), Temp.kelvin(281))
+            TempSeries.Entry.of(date1, Temp.kelvin(280)),
+            TempSeries.Entry.of(date2, Temp.kelvin(281))
         );
-        assertThat(series.get(1)).isEqualTo(TempSeries.Entry.of(LocalDate.parse("2020-01-02"), Temp.kelvin(281)));
+        assertThat(series.get(1)).isEqualTo(TempSeries.Entry.of(date2, Temp.kelvin(281)));
     }
 }
