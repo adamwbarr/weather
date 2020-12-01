@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -52,6 +53,42 @@ class FromCsvTest {
             284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
             """);
         assertThat(row.temp()).isEqualTo(Temp.kelvin(280.32));
+    }
+
+    @Test
+    void readFrom_MissingDtColumn_ShouldThrowException() {
+        assertThatThrownBy(
+            () -> parseRow("""
+                dt_iso,city_name,temp
+                1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+                """)
+        ).isInstanceOf(
+            IllegalArgumentException.class
+        );
+    }
+
+    @Test
+    void readFrom_InvalidDtColumn_ShouldThrowException() {
+        assertThatThrownBy(
+            () -> parseRow("""
+                dt,dt_iso,city_name,temp
+                INVALID,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+                    """)
+        ).isInstanceOf(
+            IllegalArgumentException.class
+        );
+    }
+
+    @Test
+    void readFrom_InvalidTempColumn_ShouldThrowException() {
+        assertThatThrownBy(
+            () -> parseRow("""
+                dt,dt_iso,city_name,temp
+                284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,INVALID
+                    """)
+        ).isInstanceOf(
+            IllegalArgumentException.class
+        );
     }
 
     @Test

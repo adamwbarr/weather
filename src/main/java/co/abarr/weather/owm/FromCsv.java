@@ -2,8 +2,7 @@ package co.abarr.weather.owm;
 
 import co.abarr.weather.location.Location;
 import co.abarr.weather.temp.Temp;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.CSVReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -50,30 +50,45 @@ class FromCsv {
      * Reads a csv of rows from a string.
      */
     public static List<OwmRow> readFrom(String s) {
-        return readFrom(new StringReader(s));
+        try {
+            return readFrom(new StringReader(s));
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
     }
 
     /**
      * Reads a csv of rows from an input reader.
      */
-    public static List<OwmRow> readFrom(Reader reader) {
-        CsvToBean<RawRow> csv = new CsvToBeanBuilder<RawRow>(reader).withType(RawRow.class).build();
+    public static List<OwmRow> readFrom(Reader reader) throws IOException {
         List<OwmRow> rows = new ArrayList<>();
-        for (RawRow raw : csv) {
-            OwmRow row = OwmRow.of(
-                Location.of(raw.city_name),
-                Instant.ofEpochSecond(raw.dt),
-                Temp.kelvin(raw.temp)
-            );
-            rows.add(row);
+        try (CSVReader csv = new CSVReader(reader)) {
+            List<String> header = Arrays.asList(csv.readNextSilently());
+            int dtIndex = columnIndexOf(header, "dt");
+            int cityNameIndex = columnIndexOf(header, "city_name");
+            int tempIndex = columnIndexOf(header, "temp");
+            String[] row;
+            while ((row = csv.readNextSilently()) != null) {
+                try {
+                    Location location = Location.of(row[cityNameIndex]);
+                    Instant time = Instant.ofEpochSecond(Long.parseLong(row[dtIndex]));
+                    Temp temp = Temp.kelvin(Double.parseDouble(row[tempIndex]));
+                    rows.add(OwmRow.of(location, time, temp));
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Error parsing row " + Arrays.toString(row), e);
+                }
+            }
         }
         return rows;
     }
 
-    public static class RawRow {
-        public long dt;
-        public String city_name;
-        public double temp;
+    private static int columnIndexOf(List<String> header, String column) {
+        int index = header.indexOf(column);
+        if (index == -1) {
+            throw new IllegalArgumentException("Column \"" + column + "\" not found in " + header);
+        } else {
+            return index;
+        }
     }
 
     private FromCsv() {}
