@@ -1,6 +1,5 @@
 package co.abarr.weather.owm;
 
-import co.abarr.weather.location.Location;
 import co.abarr.weather.temp.Temp;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,13 +16,13 @@ class FromCsvTest {
     @Test
     void readFrom_ValidCsv_ShouldReturnCorrectNumberOfRows() {
         List<OwmRow> rows = parseRows("""
-            dt,dt_iso,city_name,temp
-            283996800,1979-01-01 00:00:00 +0000 UTC,Central Park,280.32
-            283996800,1979-01-01 00:00:00 +0000 UTC,Central Park,280.32
-            283996800,1979-01-01 00:00:00 +0000 UTC,Central Park,280.32
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.29
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.29
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.29
+            dt,dt_iso,timezone,city_name,temp
+            283996800,1979-01-01 00:00:00 +0000 UTC,-18000,Central Park,280.32
+            283996800,1979-01-01 00:00:00 +0000 UTC,-18000,Central Park,280.32
+            283996800,1979-01-01 00:00:00 +0000 UTC,-18000,Central Park,280.32
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.29
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.29
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.29
             """);
         assertThat(rows).hasSize(6);
     }
@@ -31,8 +30,8 @@ class FromCsvTest {
     @Test
     void readFrom_ValidCsv_ShouldParseTimeCorrectly() {
         OwmRow row = parseRow("""
-            dt,dt_iso,city_name,temp
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+            dt,dt_iso,timezone,city_name,temp
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
             """);
         assertThat(row.time()).isEqualTo("1979-01-01T01:00:00Z");
     }
@@ -40,17 +39,26 @@ class FromCsvTest {
     @Test
     void readFrom_ValidCsv_ShouldParseLocationCorrectly() {
         OwmRow row = parseRow("""
-            dt,dt_iso,city_name,temp
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+            dt,dt_iso,timezone,city_name,temp
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
             """);
         assertThat(row.location()).isEqualTo(Location.of("Central Park"));
     }
 
     @Test
+    void readFrom_ValidCsv_ShouldParseDateCorrectly() {
+        OwmRow row = parseRow("""
+            dt,dt_iso,timezone,city_name,temp
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
+            """);
+        assertThat(row.date()).isEqualTo("1978-12-31");
+    }
+
+    @Test
     void readFrom_ValidCsv_ShouldParseTempCorrectly() {
         OwmRow row = parseRow("""
-            dt,dt_iso,city_name,temp
-            284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+            dt,dt_iso,timezone,city_name,temp
+            284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
             """);
         assertThat(row.temp()).isEqualTo(Temp.kelvin(280.32));
     }
@@ -59,8 +67,8 @@ class FromCsvTest {
     void readFrom_MissingDtColumn_ShouldThrowException() {
         assertThatThrownBy(
             () -> parseRow("""
-                dt_iso,city_name,temp
-                1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+                dt_iso,timezone,city_name,temp
+                1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
                 """)
         ).isInstanceOf(
             IllegalArgumentException.class
@@ -71,8 +79,8 @@ class FromCsvTest {
     void readFrom_InvalidDtColumn_ShouldThrowException() {
         assertThatThrownBy(
             () -> parseRow("""
-                dt,dt_iso,city_name,temp
-                INVALID,1979-01-01 01:00:00 +0000 UTC,Central Park,280.32
+                dt,dt_iso,timezone,city_name,temp
+                INVALID,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,280.32
                     """)
         ).isInstanceOf(
             IllegalArgumentException.class
@@ -83,8 +91,8 @@ class FromCsvTest {
     void readFrom_InvalidTempColumn_ShouldThrowException() {
         assertThatThrownBy(
             () -> parseRow("""
-                dt,dt_iso,city_name,temp
-                284000400,1979-01-01 01:00:00 +0000 UTC,Central Park,INVALID
+                dt,dt_iso,timezone,city_name,temp
+                284000400,1979-01-01 01:00:00 +0000 UTC,-18000,Central Park,INVALID
                     """)
         ).isInstanceOf(
             IllegalArgumentException.class

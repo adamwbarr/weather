@@ -1,6 +1,5 @@
 package co.abarr.weather.owm;
 
-import co.abarr.weather.location.Location;
 import co.abarr.weather.temp.Temp;
 import com.opencsv.CSVReader;
 import org.slf4j.Logger;
@@ -13,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,17 +28,17 @@ class FromCsv {
     /**
      * Rows parsed from central_park.csv download file.
      */
-    public static List<OwmRow> readFromCentralParkCsv() {
+    public static OwmBatch readFromCentralParkCsv() {
         return FromCsv.readFrom(Paths.get("./data/central_park.csv"));
     }
 
     /**
      * Reads a csv of rows from a file.
      */
-    public static List<OwmRow> readFrom(Path file) {
+    public static OwmBatch readFrom(Path file) {
         long t0 = System.currentTimeMillis();
         try {
-            List<OwmRow> rows = readFrom(Files.newBufferedReader(file));
+            OwmBatch rows = readFrom(Files.newBufferedReader(file));
             logger.info("Took {}ms to read {} rows from {}", System.currentTimeMillis() - t0, rows.size(), file);
             return rows;
         } catch (IOException e) {
@@ -49,7 +49,7 @@ class FromCsv {
     /**
      * Reads a csv of rows from a string.
      */
-    public static List<OwmRow> readFrom(String s) {
+    public static OwmBatch readFrom(String s) {
         try {
             return readFrom(new StringReader(s));
         } catch (IOException e) {
@@ -60,11 +60,12 @@ class FromCsv {
     /**
      * Reads a csv of rows from an input reader.
      */
-    public static List<OwmRow> readFrom(Reader reader) throws IOException {
+    public static OwmBatch readFrom(Reader reader) throws IOException {
         List<OwmRow> rows = new ArrayList<>();
         try (CSVReader csv = new CSVReader(reader)) {
             List<String> header = Arrays.asList(csv.readNextSilently());
             int dtIndex = columnIndexOf(header, "dt");
+            int timezoneIndex = columnIndexOf(header, "timezone");
             int cityNameIndex = columnIndexOf(header, "city_name");
             int tempIndex = columnIndexOf(header, "temp");
             String[] row;
@@ -72,14 +73,15 @@ class FromCsv {
                 try {
                     Location location = Location.of(row[cityNameIndex]);
                     Instant time = Instant.ofEpochSecond(Long.parseLong(row[dtIndex]));
+                    ZoneOffset zone = ZoneOffset.ofTotalSeconds(Integer.parseInt(row[timezoneIndex]));
                     Temp temp = Temp.kelvin(Double.parseDouble(row[tempIndex]));
-                    rows.add(OwmRow.of(location, time, temp));
+                    rows.add(OwmRow.of(location, time, zone, temp));
                 } catch (Exception e) {
                     throw new IllegalArgumentException("Error parsing row " + Arrays.toString(row), e);
                 }
             }
         }
-        return rows;
+        return OwmBatch.of(rows);
     }
 
     private static int columnIndexOf(List<String> header, String column) {

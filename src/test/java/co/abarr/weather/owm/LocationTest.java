@@ -1,4 +1,4 @@
-package co.abarr.weather.location;
+package co.abarr.weather.owm;
 
 import org.junit.jupiter.api.Test;
 

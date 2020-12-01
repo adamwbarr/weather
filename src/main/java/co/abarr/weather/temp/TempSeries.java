@@ -4,11 +4,11 @@ import java.time.LocalDate;
 import java.util.*;
 
 /**
- * An ordered list of contiguous dates and their associated temperatures.
+ * A ordered list of contiguous dates and their associated temperatures.
  * <p>
  * Created by adam on 01/12/2020.
  */
-public class TempSeries extends AbstractList<TempSeries.Entry> {
+public final class TempSeries extends AbstractList<TempSeries.Entry> {
     private final LocalDate start;
     private final float[] temps;
 
@@ -65,6 +65,13 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
             return temp;
         }
 
+        /**
+         * Converts the temperature to the supplied units.
+         */
+        public Entry to(TempUnits units) {
+            return of(date, temp.to(units));
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -98,6 +105,20 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
      */
     public static TempSeries empty() {
         return of();
+    }
+
+    /**
+     * Creates a series containing the supplied entries.
+     * <p>
+     * The dates of the supplied entries must be contiguous (ie there can be no
+     * gaps), else an exception will be thrown.
+     */
+    public static TempSeries of(Map<LocalDate, Temp> map) {
+        List<Entry> entries = new ArrayList<>(map.size());
+        for (Map.Entry<LocalDate, Temp> entry : map.entrySet()) {
+            entries.add(Entry.of(entry.getKey(), entry.getValue()));
+        }
+        return of(entries);
     }
 
     /**

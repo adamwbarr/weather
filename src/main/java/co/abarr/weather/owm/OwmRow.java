@@ -1,10 +1,10 @@
 package co.abarr.weather.owm;
 
-import co.abarr.weather.location.Location;
 import co.abarr.weather.temp.Temp;
 
 import java.time.Instant;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 /**
@@ -15,11 +15,13 @@ import java.util.Objects;
 public final class OwmRow {
     private final Location location;
     private final Instant time;
+    private final ZoneOffset zone;
     private final Temp temp;
 
-    private OwmRow(Location location, Instant time, Temp temp) {
+    private OwmRow(Location location, Instant time, ZoneOffset zone, Temp temp) {
         this.location = Objects.requireNonNull(location);
         this.time = Objects.requireNonNull(time);
+        this.zone = Objects.requireNonNull(zone);
         this.temp = Objects.requireNonNull(temp);
     }
 
@@ -38,23 +40,17 @@ public final class OwmRow {
     }
 
     /**
+     * The symbolic (local) date associated with the row.
+     */
+    public LocalDate date() {
+        return time.atOffset(zone).toLocalDate();
+    }
+
+    /**
      * The temperature that was read.
      */
     public Temp temp() {
         return temp;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OwmRow that = (OwmRow) o;
-        return location.equals(that.location) && time.equals(that.time) && temp.equals(that.temp);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(location, time, temp);
     }
 
     @Override
@@ -63,10 +59,12 @@ public final class OwmRow {
     }
 
     /**
-     * Rows parsed from central_park.csv download file.
+     * Creates a new row.
+     * <p>
+     * An exception will be thrown if any parameter is null.
      */
-    public static List<OwmRow> centralParkCsv() {
-        return FromCsv.readFromCentralParkCsv();
+    public static OwmRow of(Location location, Instant time, Temp temp) {
+        return of(location, time, ZoneOffset.UTC, temp);
     }
 
     /**
@@ -74,7 +72,7 @@ public final class OwmRow {
      * <p>
      * An exception will be thrown if any parameter is null.
      */
-    public static OwmRow of(Location location, Instant time, Temp temp) {
-        return new OwmRow(location, time, temp);
+    public static OwmRow of(Location location, Instant time, ZoneOffset zone, Temp temp) {
+        return new OwmRow(location, time, zone, temp);
     }
 }

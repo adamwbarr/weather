@@ -49,4 +49,37 @@ class TempTest {
         Temp temp = Temp.kelvin(120);
         assertThat(temp.toKelvin()).isEqualTo(temp);
     }
+
+    @Test
+    void to_KelvinFromFahrenheight_ShouldBeCorrect() {
+        Temp temp = Temp.fahrenheit(41);
+        assertThat(temp.toKelvin()).isEqualTo(Temp.kelvin(278.15));
+    }
+
+    @Test
+    void to_FahrenheightFromKelvin_ShouldBeCorrect() {
+        Temp temp = Temp.kelvin(278.15);
+        assertThat(temp.toFahrenheit()).isEqualTo(Temp.fahrenheit(41));
+    }
+
+    @Test
+    void compareTo_WhenEqual_ShouldReturnZero() {
+        Temp temp1 = Temp.kelvin(1);
+        Temp temp2 = Temp.kelvin(1);
+        assertThat(temp1.compareTo(temp2)).isEqualTo(0);
+    }
+
+    @Test
+    void compareTo_WhenLessThan_ShouldReturnNegative() {
+        Temp temp1 = Temp.kelvin(1);
+        Temp temp2 = Temp.kelvin(2);
+        assertThat(temp1.compareTo(temp2)).isLessThan(0);
+    }
+
+    @Test
+    void compareTo_WhenoreThan_ShouldReturnPositive() {
+        Temp temp1 = Temp.kelvin(2);
+        Temp temp2 = Temp.kelvin(1);
+        assertThat(temp1.compareTo(temp2)).isGreaterThan(0);
+    }
 }
