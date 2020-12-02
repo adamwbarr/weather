@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -16,25 +15,18 @@ class TempSeriesTest {
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
 
     @Test
-    void of_DuplicateEntries_ShouldThrowException() {
-        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
-        TempSeries.Entry entry2 = TempSeries.Entry.of(date1, Temp.kelvin(281));
-        assertThatThrownBy(() -> TempSeries.of(entry1, entry2)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void of_MissingDates_ShouldThrowException() {
-        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
-        TempSeries.Entry entry2 = TempSeries.Entry.of(date3, Temp.kelvin(281));
-        assertThatThrownBy(() -> TempSeries.of(entry1, entry2)).isInstanceOf(IllegalArgumentException.class);
+    void of_DuplicateSamples_ShouldRetainLatest() {
+        TempSample sample1 = Temp.fahrenheit(40).on(date1);
+        TempSample sample2 = Temp.fahrenheit(41).on(date1);
+        assertThat(TempSeries.of(sample1, sample2)).containsExactly(sample2);
     }
 
     @Test
     void of_UnorderedEntries_ShouldOrderByDate() {
-        TempSeries.Entry entry1 = TempSeries.Entry.of(date1, Temp.kelvin(280));
-        TempSeries.Entry entry2 = TempSeries.Entry.of(date2, Temp.kelvin(281));
-        TempSeries series = TempSeries.of(entry2, entry1);
-        assertThat(series).containsExactly(entry1, entry2);
+        TempSample sample1 = Temp.fahrenheit(40).on(date1);
+        TempSample sample2 = Temp.fahrenheit(41).on(date2);
+        TempSeries series = TempSeries.of(sample2, sample1);
+        assertThat(series).containsExactly(sample1, sample2);
     }
 
     @Test
@@ -45,8 +37,8 @@ class TempSeriesTest {
     @Test
     void size_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(date1, Temp.kelvin(280)),
-            TempSeries.Entry.of(date2, Temp.kelvin(281))
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(41).on(date2)
         );
         assertThat(series).hasSize(2);
     }
@@ -54,33 +46,66 @@ class TempSeriesTest {
     @Test
     void get_OfFirstEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(date1, Temp.kelvin(280)),
-            TempSeries.Entry.of(date2, Temp.kelvin(281))
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(41).on(date2)
         );
-        assertThat(series.get(0)).isEqualTo(TempSeries.Entry.of(date1, Temp.kelvin(280)));
+        assertThat(series.get(0)).isEqualTo(Temp.fahrenheit(40).on(date1));
     }
 
     @Test
     void get_OfSubsequentEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(date1, Temp.kelvin(280)),
-            TempSeries.Entry.of(date2, Temp.kelvin(281))
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(41).on(date2)
         );
-        assertThat(series.get(1)).isEqualTo(TempSeries.Entry.of(date2, Temp.kelvin(281)));
+        assertThat(series.get(1)).isEqualTo(Temp.fahrenheit(41).on(date2));
+    }
+
+    @Test
+    void sum_OfEmptySeries_ShouldBeZero() {
+        assertThat(TempSeries.empty().sum()).isEqualTo(Temp.kelvin(0));
+    }
+
+    @Test
+    void sum_OfNonEmptySeries_ShouldBeCorrect() {
+        TempSeries series = TempSeries.of(
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(41).on(date2)
+        );
+        assertThat(series.sum()).isEqualTo(Temp.fahrenheit(81));
     }
 
     @Test
     void mean_OfEmptySeries_ShouldNotExist() {
-        TempSeries series = TempSeries.empty();
-        assertThat(series.mean()).isEmpty();
+        assertThat(TempSeries.empty().mean()).isEmpty();
     }
 
     @Test
     void mean_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            TempSeries.Entry.of(date1, Temp.kelvin(280)),
-            TempSeries.Entry.of(date2, Temp.kelvin(281))
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(41).on(date2)
         );
-        assertThat(series.mean()).contains(Temp.kelvin(280.5));
+        assertThat(series.mean()).contains(Temp.fahrenheit(40.5));
+    }
+
+    @Test
+    void hdd_OfEmptySeries_ShouldBeInReferenceUnits() {
+        TempSeries temps = TempSeries.empty();
+        TempIndexer indexer = TempIndexer.hdd(Temp.fahrenheit(65));
+        Temp hdd = temps.index(indexer);
+        assertThat(hdd).isEqualTo(Temp.fahrenheit(0));
+    }
+
+    @Test
+    void hdd_OfValidSeries_ShouldBeCorrect() {
+        TempSeries temps = TempSeries.of(
+            Temp.fahrenheit(66).on(date1),
+            Temp.fahrenheit(62).on(date2),
+            Temp.fahrenheit(60).on(date3)
+        );
+        TempIndexer indexer = TempIndexer.hdd(Temp.fahrenheit(65));
+        Temp hdd = temps.index(indexer);
+        assertThat(hdd).isEqualTo(Temp.fahrenheit(8));
     }
 }

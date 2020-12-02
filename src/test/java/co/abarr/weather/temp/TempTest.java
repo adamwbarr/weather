@@ -94,4 +94,44 @@ class TempTest {
         Temp temp2 = Temp.kelvin(1);
         assertThat(temp1.compareTo(temp2)).isGreaterThan(0);
     }
+
+    @Test
+    void plus_TempWithSameUnits_ShouldBeCorrect() {
+        Temp temp1 = Temp.kelvin(2);
+        Temp temp2 = Temp.kelvin(1);
+        assertThat(temp1.plus(temp2)).isEqualTo(Temp.kelvin(3));
+    }
+
+    @Test
+    void plus_TempWithDifferentUnits_ShouldBeInUnitsOfTarget() {
+        Temp temp1 = Temp.kelvin(2);
+        Temp temp2 = Temp.celsius(0);
+        assertThat(temp1.plus(temp2).units()).isEqualTo(TempUnits.KELVIN);
+    }
+
+    @Test
+    void minus_TempWithSameUnits_ShouldBeCorrect() {
+        Temp temp1 = Temp.kelvin(3);
+        Temp temp2 = Temp.kelvin(1);
+        assertThat(temp1.minus(temp2)).isEqualTo(Temp.kelvin(2));
+    }
+
+    @Test
+    void minus_TempWithDifferentUnits_ShouldBeInUnitsOfTarget() {
+        Temp temp1 = Temp.kelvin(2);
+        Temp temp2 = Temp.celsius(0);
+        assertThat(temp1.minus(temp2).units()).isEqualTo(TempUnits.KELVIN);
+    }
+
+    @Test
+    void divideBy_Zero_ShouldThrowException() {
+        Temp temp = Temp.kelvin(200);
+        assertThatThrownBy(() -> temp.divideBy(0)).isInstanceOf(ArithmeticException.class);
+    }
+
+    @Test
+    void divideBy_PositiveInt_ShouldReturnCorrectValue() {
+        Temp temp = Temp.kelvin(200);
+        assertThat(temp.divideBy(2)).isEqualTo(Temp.kelvin(100));
+    }
 }

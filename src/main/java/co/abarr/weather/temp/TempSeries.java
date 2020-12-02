@@ -1,7 +1,5 @@
 package co.abarr.weather.temp;
 
-import co.abarr.weather.index.Index;
-import co.abarr.weather.index.IndexSeries;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
@@ -9,165 +7,126 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * A ordered list of contiguous dates and their associated temperatures.
+ * A ordered list of temperature samples.
+ * <p>
+ * A series is guaranteed to contain at most one sample per date.
  * <p>
  * Created by adam on 01/12/2020.
  */
-public final class TempSeries extends AbstractList<TempSeries.Entry> {
-    private final IndexSeries temps;
+public final class TempSeries extends AbstractList<TempSample> {
+    private final List<TempSample> samples;
 
-    private TempSeries(IndexSeries temps) {
-        this.temps = temps;
+    private TempSeries(List<TempSample> samples) {
+        this.samples = samples;
     }
 
     /**
-     * The entry at the supplied index.
+     * The sample at the supplied index.
      */
     @Override
-    public Entry get(int index) {
-        IndexSeries.Entry entry = temps.get(index);
-        return Entry.of(entry.date(), Temp.kelvin(entry.index().floatValue()));
+    public TempSample get(int index) {
+        return samples.get(index);
     }
 
     /**
-     * The number of entries in the series.
+     * The number of samples in the series.
      */
     @Override
     public int size() {
-        return temps.size();
+        return samples.size();
+    }
+
+    /**
+     * Calculates an index from this series.
+     * <p>
+     * The resulting index value is the sum of applying the indexer to each
+     * sample in this series.
+     */
+    public Temp index(TempIndexer indexer) {
+        if (isEmpty()) {
+            return Temp.zero(indexer.indexFor(Temp.kelvin(0)).units());
+        } else {
+            Temp sum = indexer.indexFor(get(0).temp());
+            for (int i = 1; i < size(); i++) {
+                sum = sum.plus(indexer.indexFor(get(i).temp()));
+            }
+            return sum;
+        }
+    }
+
+    /**
+     * The sum of the series.
+     */
+    public Temp sum() {
+        if (isEmpty()) {
+            return Temp.kelvin(0);
+        } else {
+            Temp sum = get(0).temp();
+            for (int i = 1; i < size(); i++) {
+                sum = sum.plus(get(i).temp());
+            }
+            return sum;
+        }
     }
 
     /**
      * The mean of the series, if there is one.
      */
     public Optional<Temp> mean() {
-        return temps.mean().map(index -> Temp.kelvin(index.floatValue()));
-    }
-
-    /**
-     * Calculates a HDD (heating-degree-day) index from this series.
-     * <p>
-     * For each entry the HDD is the difference between that day's temp and the
-     * supplied reference temp, capped at zero, in units of the reference temp.
-     */
-    public IndexSeries hdd(Temp reference) {
-        return null;
-    }
-
-    /**
-     * A date and its associated temperature.
-     */
-    public static class Entry {
-        private final LocalDate date;
-        private final Temp temp;
-
-        private Entry(LocalDate date, Temp temp) {
-            this.date = Objects.requireNonNull(date);
-            this.temp = Objects.requireNonNull(temp);
-        }
-
-        /**
-         * The date with which the temperature is associated.
-         */
-        public LocalDate date() {
-            return date;
-        }
-
-        /**
-         * The temperature on the date.
-         */
-        public Temp temp() {
-            return temp;
-        }
-
-        /**
-         * Converts the temperature to the supplied units.
-         */
-        public Entry to(TempUnits units) {
-            return of(date, temp.to(units));
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Entry entry = (Entry) o;
-            return date.equals(entry.date) && temp.equals(entry.temp);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(date, temp);
-        }
-
-        @Override
-        public String toString() {
-            return date + "=" + temp;
-        }
-
-        /**
-         * Creates a new entry.
-         * <p>
-         * An exception will be thrown if the date or temperature are null.
-         */
-        public static Entry of(LocalDate date, Temp temp) {
-            return new Entry(date, temp);
+        if (isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(sum().divideBy(size()));
         }
     }
 
     /**
-     * Creates a series containing no entries.
+     * Creates a series containing no samples.
      */
     public static TempSeries empty() {
         return of();
     }
 
     /**
-     * Creates a series containing the supplied entries.
-     * <p>
-     * The dates of the supplied entries must be contiguous (ie there can be no
-     * gaps), else an exception will be thrown.
-     */
-    public static TempSeries of(Map<LocalDate, Temp> map) {
-        List<Entry> entries = new ArrayList<>(map.size());
-        for (Map.Entry<LocalDate, Temp> entry : map.entrySet()) {
-            entries.add(Entry.of(entry.getKey(), entry.getValue()));
-        }
-        return of(entries);
-    }
-
-    /**
-     * Creates a series containing the supplied dates.
+     * Creates a series from a factory function.
      */
     public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        List<Entry> entries = new ArrayList<>();
+        List<TempSample> samples = new ArrayList<>();
         for (LocalDate date : dates.all()) {
-            entries.add(Entry.of(date, temp.apply(date)));
+            samples.add(temp.apply(date).on(date));
         }
-        return of(entries);
+        return new TempSeries(samples);
     }
 
     /**
-     * Creates a series containing the supplied entries.
+     * Creates a series containing the supplied samples.
      * <p>
-     * The dates of the supplied entries must be contiguous (ie there can be no
-     * gaps), else an exception will be thrown.
+     * If the units of the supplied temperatures are mismatched, a single
      */
-    public static TempSeries of(Entry... entries) {
-        return of(Arrays.asList(entries));
+    public static TempSeries of(TempSample... samples) {
+        return of(Arrays.asList(samples));
     }
 
     /**
-     * Creates a series containing the supplied entries.
-     * <p>
-     * The dates of the supplied entries must be contiguous (ie there can be no
-     * gaps), else an exception will be thrown.
+     * Creates a series containing the supplied samples.
      */
-    public static TempSeries of(Iterable<? extends Entry> entries) {
-        List<IndexSeries.Entry> index = new ArrayList<>();
-        for (Entry entry : entries) {
-            index.add(IndexSeries.Entry.of(entry.date, Index.of(entry.temp.toKelvin().floatValue())));
+    public static TempSeries of(Iterable<? extends TempSample> samples) {
+        Map<LocalDate, Temp> map = new HashMap<>();
+        for (TempSample sample : samples) {
+            map.put(sample.date(), sample.temp());
         }
-        return new TempSeries(IndexSeries.of(index));
+        return of(map);
+    }
+
+    /**
+     * Creates a series containing the supplied samples.
+     */
+    public static TempSeries of(Map<LocalDate, Temp> map) {
+        List<TempSample> samples = new ArrayList<>(map.size());
+        for (Map.Entry<LocalDate, Temp> entry : map.entrySet()) {
+            samples.add(entry.getValue().on(entry.getKey()));
+        }
+        samples.sort(Comparator.comparing(TempSample::date));
+        return new TempSeries(samples);
     }
 }

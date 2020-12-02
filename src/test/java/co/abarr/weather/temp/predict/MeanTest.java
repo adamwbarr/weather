@@ -1,6 +1,7 @@
 package co.abarr.weather.temp.predict;
 
 import co.abarr.weather.temp.Temp;
+import co.abarr.weather.temp.TempSample;
 import co.abarr.weather.temp.TempSeries;
 import org.junit.jupiter.api.Test;
 
@@ -28,17 +29,17 @@ class MeanTest {
     @Test
     void predict_WhenTrainedOnNonEmptySeries_ShouldReturnMean() {
         TempPredictor predictor = predictor(
-            TempSeries.Entry.of(date1, Temp.kelvin(200)),
-            TempSeries.Entry.of(date2, Temp.kelvin(210)),
-            TempSeries.Entry.of(date3, Temp.kelvin(250))
+            TempSample.of(date1, Temp.kelvin(200)),
+            TempSample.of(date2, Temp.kelvin(210)),
+            TempSample.of(date3, Temp.kelvin(250))
         );
         TempSeries prediction = predictor.predict(date4, date5);
         assertThat(prediction).containsExactly(
-            TempSeries.Entry.of(date4, Temp.kelvin(220))
+            TempSample.of(date4, Temp.kelvin(220))
         );
     }
 
-    private TempPredictor predictor(TempSeries.Entry... entries) {
+    private TempPredictor predictor(TempSample... entries) {
         return new Mean(TempSeries.of(entries));
     }
 }
