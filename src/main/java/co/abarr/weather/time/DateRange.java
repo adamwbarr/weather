@@ -73,6 +73,13 @@ public final class DateRange {
     }
 
     /**
+     * Creates a new date range spanning a calendar year.
+     */
+    public static DateRange year(int year) {
+        return of(LocalDate.of(year, 1, 1), LocalDate.of(year + 1, 1, 1));
+    }
+
+    /**
      * Creates a new date range.
      * <p>
      * An exception will be thrown if the start or end are null, or the start

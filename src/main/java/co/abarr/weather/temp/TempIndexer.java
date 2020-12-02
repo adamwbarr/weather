@@ -20,4 +20,9 @@ public interface TempIndexer {
     static TempIndexer hdd(Temp reference) {
         return new Hdd(reference);
     }
+
+    /**
+     * Standard US HDD index.
+     */
+    TempIndexer HDD_65 = hdd(Temp.fahrenheit(65));
 }

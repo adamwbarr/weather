@@ -3,6 +3,8 @@ package co.abarr.weather.temp;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Year;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -107,5 +109,37 @@ class TempSeriesTest {
         TempIndexer indexer = TempIndexer.hdd(Temp.fahrenheit(65));
         Temp hdd = temps.index(indexer);
         assertThat(hdd).isEqualTo(Temp.fahrenheit(8));
+    }
+
+    @Test
+    void byYear_WhenEmpty_ReturnsEmptyMap() {
+        assertThat(TempSeries.empty().byYear()).isEmpty();
+    }
+
+    @Test
+    void byYear_WhenMultipleYears_ReturnsCorrectYears() {
+        TempSeries temps = TempSeries.of(
+            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
+            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
+            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
+        );
+        Map<Year, TempSeries> byYear = temps.byYear();
+        assertThat(byYear).containsOnlyKeys(Year.of(2019), Year.of(2020));
+    }
+
+    @Test
+    void byYear_WhenMultipleYears_ReturnsCorrectSeriesForYear() {
+        TempSeries temps = TempSeries.of(
+            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
+            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
+            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
+        );
+        Map<Year, TempSeries> byYear = temps.byYear();
+        assertThat(byYear.get(Year.of(2019))).isEqualTo(
+            TempSeries.of(
+                Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
+                Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02"))
+            )
+        );
     }
 }

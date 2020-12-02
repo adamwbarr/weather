@@ -3,6 +3,7 @@ package co.abarr.weather.temp;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.*;
 import java.util.function.Function;
 
@@ -34,6 +35,28 @@ public final class TempSeries extends AbstractList<TempSample> {
     @Override
     public int size() {
         return samples.size();
+    }
+
+    /**
+     * Groups this series into sub-series by year.
+     */
+    public Map<Year, TempSeries> byYear() {
+        Map<Year, List<TempSample>> lists = new HashMap<>();
+        Year current = null;
+        List<TempSample> samples = null;
+        for (TempSample sample : this) {
+            Year year = Year.from(sample.date());
+            if (!year.equals(current)) {
+                lists.put(year, samples = new ArrayList<>());
+                current = year;
+            }
+            samples.add(sample);
+        }
+        Map<Year, TempSeries> byYear = new TreeMap<>();
+        for (Map.Entry<Year, List<TempSample>> entry : lists.entrySet()) {
+            byYear.put(entry.getKey(), new TempSeries(entry.getValue()));
+        }
+        return byYear;
     }
 
     /**
