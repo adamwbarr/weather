@@ -7,10 +7,10 @@ import co.abarr.weather.time.DateRange;
 /**
  * Created by adam on 01/12/2020.
  */
-class SimpleMean implements TempPredictor {
+class Mean implements TempPredictor {
     private final Temp mean;
 
-    public SimpleMean(TempSeries train) {
+    public Mean(TempSeries train) {
         mean = train.mean().orElse(null);
     }
 

@@ -3,6 +3,8 @@ package co.abarr.weather.temp;
 import java.util.Objects;
 
 /**
+ * A temperature (with associated units).
+ * <p>
  * Created by adam on 30/11/2020.
  */
 public final class Temp extends Number implements Comparable<Temp> {
@@ -71,23 +73,44 @@ public final class Temp extends Number implements Comparable<Temp> {
     }
 
     /**
+     * Converts this temperature to Celsius.
+     */
+    public Temp toCelsius() {
+        return to(TempUnits.CELSIUS);
+    }
+
+    /**
+     * Converts this temperature to the units of the supplied temperature.
+     */
+    public Temp toUnitsOf(Temp o) {
+        return to(o.units);
+    }
+
+    /**
      * Converts this temperature to the supplied units.
      */
     public Temp to(TempUnits units) {
         if (this.units == units) {
             return this;
-        } else if (this.units == TempUnits.KELVIN) {
-            if (units == TempUnits.FAHRENHEIT) {
-                float fahrenheit = (value - 273.15f) * 9 / 5f + 32;
-                return of(fahrenheit, units);
-            }
-        } else if (this.units == TempUnits.FAHRENHEIT) {
-            if (units == TempUnits.KELVIN) {
-                float kelvin = (value - 32) * 5 / 9f + 273.15f;
-                return of(kelvin, units);
-            }
+        } else {
+            return fromKelvin(kelvin(), units);
         }
-        throw new UnsupportedOperationException("TODO");
+    }
+
+    private float kelvin() {
+        return switch (units) {
+            case KELVIN -> value;
+            case FAHRENHEIT -> (value - 32f) * 5 / 9f + 273.15f;
+            case CELSIUS -> value + 273.15f;
+        };
+    }
+
+    private static Temp fromKelvin(float kelvin, TempUnits unit) {
+        return switch (unit) {
+            case KELVIN -> kelvin(kelvin);
+            case FAHRENHEIT -> fahrenheit((kelvin - 273.15f) * 9 / 5f + 32);
+            case CELSIUS -> celsius(kelvin - 273.15f);
+        };
     }
 
     @Override
@@ -105,7 +128,7 @@ public final class Temp extends Number implements Comparable<Temp> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Temp temp = (Temp) o;
-        return Double.compare(temp.value, value) == 0 && units == temp.units;
+        return Float.compare(temp.value, value) == 0 && units == temp.units;
     }
 
     @Override
@@ -120,6 +143,15 @@ public final class Temp extends Number implements Comparable<Temp> {
      */
     public static Temp fahrenheit(double value) {
         return fahrenheit((float) value);
+    }
+
+    /**
+     * Creates a new Celsius temperature.
+     * <p>
+     * An exception will be thrown if the value is NaN or infinite.
+     */
+    public static Temp celsius(double value) {
+        return of(value, TempUnits.CELSIUS);
     }
 
     /**
@@ -148,6 +180,15 @@ public final class Temp extends Number implements Comparable<Temp> {
      */
     public static Temp fahrenheit(float value) {
         return of(value, TempUnits.FAHRENHEIT);
+    }
+
+    /**
+     * Creates a new Celsius temperature.
+     * <p>
+     * An exception will be thrown if the value is NaN or infinite.
+     */
+    public static Temp celsius(float value) {
+        return of(value, TempUnits.CELSIUS);
     }
 
     /**

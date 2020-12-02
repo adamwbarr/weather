@@ -1,5 +1,7 @@
 package co.abarr.weather.temp;
 
+import co.abarr.weather.index.Index;
+import co.abarr.weather.index.IndexSeries;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
@@ -12,11 +14,9 @@ import java.util.function.Function;
  * Created by adam on 01/12/2020.
  */
 public final class TempSeries extends AbstractList<TempSeries.Entry> {
-    private final LocalDate start;
-    private final float[] temps;
+    private final IndexSeries temps;
 
-    private TempSeries(LocalDate start, float[] temps) {
-        this.start = start;
+    private TempSeries(IndexSeries temps) {
         this.temps = temps;
     }
 
@@ -25,13 +25,8 @@ public final class TempSeries extends AbstractList<TempSeries.Entry> {
      */
     @Override
     public Entry get(int index) {
-        if (index < 0 || index >= size()) {
-            throw new IndexOutOfBoundsException(index);
-        } else {
-            LocalDate date = start.plusDays(index);
-            Temp temp = Temp.kelvin(temps[index]);
-            return Entry.of(date, temp);
-        }
+        IndexSeries.Entry entry = temps.get(index);
+        return Entry.of(entry.date(), Temp.kelvin(entry.index().floatValue()));
     }
 
     /**
@@ -39,22 +34,24 @@ public final class TempSeries extends AbstractList<TempSeries.Entry> {
      */
     @Override
     public int size() {
-        return temps.length;
+        return temps.size();
     }
 
     /**
      * The mean of the series, if there is one.
      */
     public Optional<Temp> mean() {
-        if (isEmpty()) {
-            return Optional.empty();
-        } else {
-            float sum = 0;
-            for (float temp : temps) {
-                sum += temp;
-            }
-            return Optional.of(Temp.kelvin(sum / temps.length));
-        }
+        return temps.mean().map(index -> Temp.kelvin(index.floatValue()));
+    }
+
+    /**
+     * Calculates a HDD (heating-degree-day) index from this series.
+     * <p>
+     * For each entry the HDD is the difference between that day's temp and the
+     * supplied reference temp, capped at zero, in units of the reference temp.
+     */
+    public IndexSeries hdd(Temp reference) {
+        return null;
     }
 
     /**
@@ -167,24 +164,10 @@ public final class TempSeries extends AbstractList<TempSeries.Entry> {
      * gaps), else an exception will be thrown.
      */
     public static TempSeries of(Iterable<? extends Entry> entries) {
-        List<Entry> list = new ArrayList<>();
-        entries.forEach(list::add);
-        list.sort(Comparator.comparing(Entry::date));
-        if (list.isEmpty()) {
-            return new TempSeries(null, new float[0]);
-        } else {
-            float[] temps = new float[list.size()];
-            LocalDate start = list.get(0).date;
-            LocalDate expected = start;
-            for (int i = 0; i < list.size(); i++) {
-                Entry entry = list.get(i);
-                if (!entry.date.equals(expected)) {
-                    throw new IllegalArgumentException(String.format("Invalid dates: expected %s, found %s", expected, entry.date));
-                }
-                temps[i] = entry.temp.toKelvin().floatValue();
-                expected = expected.plusDays(1);
-            }
-            return new TempSeries(start, temps);
+        List<IndexSeries.Entry> index = new ArrayList<>();
+        for (Entry entry : entries) {
+            index.add(IndexSeries.Entry.of(entry.date, Index.of(entry.temp.toKelvin().floatValue())));
         }
+        return new TempSeries(IndexSeries.of(index));
     }
 }

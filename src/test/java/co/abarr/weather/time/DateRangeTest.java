@@ -35,4 +35,16 @@ class DateRangeTest {
         DateRange range = DateRange.of(date1, date3);
         assertThat(range.all()).containsExactly(date1, date2);
     }
+
+    @Test
+    void size_SingleDates_ShouldBeCorrect() {
+        DateRange range = DateRange.of(date1, date1);
+        assertThat(range.size()).isEqualTo(1);
+    }
+
+    @Test
+    void size_MultipleDates_ShouldBeCorrect() {
+        DateRange range = DateRange.of(date1, date3);
+        assertThat(range.size()).isEqualTo(2);
+    }
 }

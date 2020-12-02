@@ -63,6 +63,18 @@ class TempTest {
     }
 
     @Test
+    void to_CelsiusFromKelvin_ShouldBeCorrect() {
+        Temp temp = Temp.kelvin(373.15);
+        assertThat(temp.toCelsius()).isEqualTo(Temp.celsius(100));
+    }
+
+    @Test
+    void to_KelvinFromCelsius_ShouldBeCorrect() {
+        Temp temp = Temp.celsius(100);
+        assertThat(temp.toKelvin()).isEqualTo(Temp.kelvin(373.15));
+    }
+
+    @Test
     void compareTo_WhenEqual_ShouldReturnZero() {
         Temp temp1 = Temp.kelvin(1);
         Temp temp2 = Temp.kelvin(1);

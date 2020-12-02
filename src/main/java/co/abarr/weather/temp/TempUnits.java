@@ -4,7 +4,7 @@ package co.abarr.weather.temp;
  * Created by adam on 30/11/2020.
  */
 public enum TempUnits {
-    KELVIN, FAHRENHEIT;
+    KELVIN, FAHRENHEIT, CELSIUS;
 
     /**
      * Single-character code for this unit.

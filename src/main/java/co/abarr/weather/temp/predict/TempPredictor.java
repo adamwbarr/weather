@@ -27,6 +27,6 @@ public interface TempPredictor {
      * Predicts the mean temperature over the all dates.
      */
     default TempPredictor mean(TempSeries train) {
-        return new SimpleMean(train);
+        return new Mean(train);
     }
 }

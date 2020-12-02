@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Created by adam on 01/12/2020.
  */
-class SimpleMeanTest {
+class MeanTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
     private final LocalDate date3 = LocalDate.parse("2020-01-03");
@@ -39,6 +39,6 @@ class SimpleMeanTest {
     }
 
     private TempPredictor predictor(TempSeries.Entry... entries) {
-        return new SimpleMean(TempSeries.of(entries));
+        return new Mean(TempSeries.of(entries));
     }
 }

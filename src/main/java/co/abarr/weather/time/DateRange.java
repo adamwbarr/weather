@@ -35,6 +35,13 @@ public final class DateRange {
     }
 
     /**
+     * The number of dates in the range.
+     */
+    public int size() {
+        return all().size();
+    }
+
+    /**
      * All dates in the range from start (inclusive) to end (exclusive).
      */
     public List<LocalDate> all() {
