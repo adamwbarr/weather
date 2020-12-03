@@ -16,5 +16,5 @@ public interface TempTrainer {
     /**
      * A simplistic model that just returns the mean of the training data.
      */
-    TempTrainer MEAN = new Mean();
+    TempTrainer MEAN = new MeanTrainer();
 }

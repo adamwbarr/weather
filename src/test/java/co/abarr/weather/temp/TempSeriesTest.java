@@ -1,5 +1,6 @@
 package co.abarr.weather.temp;
 
+import co.abarr.weather.time.DateRange;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -7,6 +8,7 @@ import java.time.Year;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -79,7 +81,7 @@ class TempSeriesTest {
 
     @Test
     void mean_OfEmptySeries_ShouldNotExist() {
-        assertThat(TempSeries.empty().mean()).isEmpty();
+        assertThatThrownBy(() -> TempSeries.empty().mean()).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
@@ -88,7 +90,7 @@ class TempSeriesTest {
             Temp.fahrenheit(40).on(date1),
             Temp.fahrenheit(41).on(date2)
         );
-        assertThat(series.mean()).contains(Temp.fahrenheit(40.5));
+        assertThat(series.mean()).isEqualTo(Temp.fahrenheit(40.5));
     }
 
     @Test
@@ -113,7 +115,7 @@ class TempSeriesTest {
 
     @Test
     void byYear_WhenEmpty_ReturnsEmptyMap() {
-        assertThat(TempSeries.empty().byYear()).isEmpty();
+        assertThat(TempSeries.empty().groupByYear()).isEmpty();
     }
 
     @Test
@@ -123,7 +125,7 @@ class TempSeriesTest {
             Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
             Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
         );
-        Map<Year, TempSeries> byYear = temps.byYear();
+        Map<Year, TempSeries> byYear = temps.groupByYear();
         assertThat(byYear).containsOnlyKeys(Year.of(2019), Year.of(2020));
     }
 
@@ -134,12 +136,46 @@ class TempSeriesTest {
             Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
             Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
         );
-        Map<Year, TempSeries> byYear = temps.byYear();
+        Map<Year, TempSeries> byYear = temps.groupByYear();
         assertThat(byYear.get(Year.of(2019))).isEqualTo(
             TempSeries.of(
                 Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
                 Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02"))
             )
         );
+    }
+
+    @Test
+    void dates_OfEmptySeries_ShouldThrowException() {
+        assertThatThrownBy(() -> TempSeries.empty().dates()).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void dates_OfNonEmptySeries_ShoulBeCorrect() {
+        TempSeries temps = TempSeries.of(
+            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
+            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
+            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
+        );
+        assertThat(temps.dates()).isEqualTo(DateRange.of(LocalDate.parse("2019-01-01"), LocalDate.parse("2020-01-02")));
+    }
+
+    @Test
+    void map_OfEmptySeries_ShouldBeEmptySeries() {
+        TempSeries series = TempSeries.empty().map((date, temp) -> temp.toKelvin());
+        assertThat(series).isEqualTo(TempSeries.empty());
+    }
+
+    @Test
+    void map_OfNonEmptySeries_ShouldBeCorrect() {
+        TempSeries raw = TempSeries.of(
+            Temp.fahrenheit(66).on(date1),
+            Temp.fahrenheit(62).on(date2)
+        );
+        TempSeries mapped = raw.map((date, temp) -> temp.plus(Temp.fahrenheit(1)));
+        assertThat(mapped).isEqualTo(TempSeries.of(
+            Temp.fahrenheit(67).on(date1),
+            Temp.fahrenheit(63).on(date2)
+        ));
     }
 }

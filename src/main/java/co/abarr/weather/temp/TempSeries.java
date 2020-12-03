@@ -3,8 +3,10 @@ package co.abarr.weather.temp;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.Year;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -19,6 +21,19 @@ public final class TempSeries extends AbstractList<TempSample> {
 
     private TempSeries(List<TempSample> samples) {
         this.samples = samples;
+    }
+
+    /**
+     * The date range spanned by this series.
+     * <p>
+     * An exception will be thrown if the series is empty.
+     */
+    public DateRange dates() {
+        if (isEmpty()) {
+            throw new UnsupportedOperationException();
+        } else {
+            return DateRange.of(samples.get(0).date(), samples.get(size() - 1).date().plusDays(1));
+        }
     }
 
     /**
@@ -40,23 +55,41 @@ public final class TempSeries extends AbstractList<TempSample> {
     /**
      * Groups this series into sub-series by year.
      */
-    public Map<Year, TempSeries> byYear() {
-        Map<Year, List<TempSample>> lists = new HashMap<>();
-        Year current = null;
-        List<TempSample> samples = null;
+    public Map<Year, TempSeries> groupByYear() {
+        return groupBy(Year::from);
+    }
+
+    /**
+     * Groups this series into sub-series by year-month.
+     */
+    public Map<Month, TempSeries> groupByMonth() {
+        return groupBy(Month::from);
+    }
+
+    private <G> Map<G, TempSeries> groupBy(Function<LocalDate, G> grouper) {
+        Map<G, List<TempSample>> lists = new LinkedHashMap<>();
         for (TempSample sample : this) {
-            Year year = Year.from(sample.date());
-            if (!year.equals(current)) {
-                lists.put(year, samples = new ArrayList<>());
-                current = year;
-            }
-            samples.add(sample);
+            G group = grouper.apply(sample.date());
+            lists.computeIfAbsent(group, key -> new ArrayList<>()).add(sample);
         }
-        Map<Year, TempSeries> byYear = new TreeMap<>();
-        for (Map.Entry<Year, List<TempSample>> entry : lists.entrySet()) {
-            byYear.put(entry.getKey(), new TempSeries(entry.getValue()));
+        Map<G, TempSeries> groups = new LinkedHashMap<>();
+        for (Map.Entry<G, List<TempSample>> entry : lists.entrySet()) {
+            groups.put(entry.getKey(), new TempSeries(entry.getValue()));
         }
-        return byYear;
+        return groups;
+    }
+
+    /**
+     * Transforms the samples in this series.
+     * <p>
+     * The resulting series will contain for the same dates as this one.
+     */
+    public TempSeries map(BiFunction<LocalDate, Temp, Temp> transform) {
+        List<TempSample> mapped = new ArrayList<>(size());
+        for (TempSample sample : samples) {
+            mapped.add(sample.temp(transform.apply(sample.date(), sample.temp())));
+        }
+        return new TempSeries(mapped);
     }
 
     /**
@@ -93,13 +126,32 @@ public final class TempSeries extends AbstractList<TempSample> {
     }
 
     /**
-     * The mean of the series, if there is one.
+     * The mean of the series.
+     * <p>
+     * An exception will be thrown if the series is empty.
      */
-    public Optional<Temp> mean() {
+    public Temp mean() {
         if (isEmpty()) {
-            return Optional.empty();
+            throw new UnsupportedOperationException();
         } else {
-            return Optional.of(sum().divideBy(size()));
+            return sum().divideBy(size());
+        }
+    }
+
+    /**
+     * The quadratic variation of the series.
+     * <p>
+     * An exception will be thrown if the series contains less than 2 elements.
+     */
+    public Temp qvar() {
+        if (size() < 2) {
+            throw new UnsupportedOperationException();
+        } else {
+            Temp dsum = Temp.zero(get(0).temp().units());
+            for (int i = 1; i < size(); i++) {
+
+            }
+            return null;
         }
     }
 

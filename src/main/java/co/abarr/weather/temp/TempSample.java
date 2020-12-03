@@ -29,6 +29,13 @@ public final class TempSample {
         return temp;
     }
 
+    /**
+     * Updates the temperature on the date.
+     */
+    public TempSample temp(Temp temp) {
+        return new TempSample(date, temp);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

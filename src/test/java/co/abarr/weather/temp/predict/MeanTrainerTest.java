@@ -13,19 +13,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Created by adam on 01/12/2020.
  */
-class MeanTest {
+class MeanTrainerTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
     private final LocalDate date3 = LocalDate.parse("2020-01-03");
     private final LocalDate date4 = LocalDate.parse("2020-01-04");
     private final LocalDate date5 = LocalDate.parse("2020-01-05");
 
-    private final Mean mean = new Mean();
+    private final MeanTrainer trainer = new MeanTrainer();
 
     @Test
     void train_OnEmptySeries_ShouldThrowException() {
         TempSeries train = TempSeries.empty();
-        assertThatThrownBy(() -> mean.train(train)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> trainer.train(train)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -35,8 +35,7 @@ class MeanTest {
             TempSample.of(date2, Temp.kelvin(210)),
             TempSample.of(date3, Temp.kelvin(250))
         );
-        TempPredictor predictor = mean.train(train);
-        TempSeries prediction = predictor.predict(date4, date5);
+        TempSeries prediction = trainer.train(train).predict(date4, date5);
         assertThat(prediction).containsExactly(TempSample.of(date4, Temp.kelvin(220)));
     }
 }
