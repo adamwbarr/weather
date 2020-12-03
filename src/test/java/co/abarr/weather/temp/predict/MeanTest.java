@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -19,27 +20,23 @@ class MeanTest {
     private final LocalDate date4 = LocalDate.parse("2020-01-04");
     private final LocalDate date5 = LocalDate.parse("2020-01-05");
 
+    private final Mean mean = new Mean();
+
     @Test
-    void predict_WhenTrainedOnEmptySeries_ShouldReturnEmptyPrediction() {
-        TempPredictor predictor = predictor();
-        TempSeries prediction = predictor.predict(date4, date5);
-        assertThat(prediction).isEmpty();
+    void train_OnEmptySeries_ShouldThrowException() {
+        TempSeries train = TempSeries.empty();
+        assertThatThrownBy(() -> mean.train(train)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void predict_WhenTrainedOnNonEmptySeries_ShouldReturnMean() {
-        TempPredictor predictor = predictor(
+        TempSeries train = TempSeries.of(
             TempSample.of(date1, Temp.kelvin(200)),
             TempSample.of(date2, Temp.kelvin(210)),
             TempSample.of(date3, Temp.kelvin(250))
         );
+        TempPredictor predictor = mean.train(train);
         TempSeries prediction = predictor.predict(date4, date5);
-        assertThat(prediction).containsExactly(
-            TempSample.of(date4, Temp.kelvin(220))
-        );
-    }
-
-    private TempPredictor predictor(TempSample... entries) {
-        return new Mean(TempSeries.of(entries));
+        assertThat(prediction).containsExactly(TempSample.of(date4, Temp.kelvin(220)));
     }
 }

@@ -2,24 +2,17 @@ package co.abarr.weather.temp.predict;
 
 import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempSeries;
-import co.abarr.weather.time.DateRange;
 
 /**
  * Created by adam on 01/12/2020.
  */
-class Mean implements TempPredictor {
-    private final Temp mean;
-
-    public Mean(TempSeries train) {
-        mean = train.mean().orElse(null);
-    }
-
-    @Override
-    public TempSeries predict(DateRange range) {
+class Mean implements TempTrainer {
+    public TempPredictor train(TempSeries train) {
+        Temp mean = train.mean().orElse(null);
         if (mean == null) {
-            return TempSeries.empty();
+            throw new IllegalArgumentException("Empty training series");
         } else {
-            return TempSeries.of(range, date -> mean);
+            return range -> TempSeries.of(range, date -> mean);
         }
     }
 }

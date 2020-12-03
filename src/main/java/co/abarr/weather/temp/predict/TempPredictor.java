@@ -22,11 +22,4 @@ public interface TempPredictor {
     default TempSeries predict(LocalDate start, LocalDate end) {
         return predict(DateRange.of(start, end));
     }
-
-    /**
-     * A predictor that returns the mean temperature over the training data.
-     */
-    default TempPredictor mean(TempSeries train) {
-        return new Mean(train);
-    }
 }
