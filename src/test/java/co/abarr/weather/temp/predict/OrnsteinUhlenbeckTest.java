@@ -14,10 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Created by adam on 04/12/2020.
  */
 class OrnsteinUhlenbeckTest {
-    private final LocalDate date1 = LocalDate.parse("2020-01-01");
-    private final LocalDate date2 = LocalDate.parse("2020-01-02");
-    private final LocalDate date3 = LocalDate.parse("2020-01-03");
-
     private OrnsteinUhlenbeck predictor() {
         return OrnsteinUhlenbeck.on(
             TempPredictor.of(Temp.celsius(0))
@@ -46,11 +42,18 @@ class OrnsteinUhlenbeckTest {
 
     @Test
     void predict_WithConstantSigma_ShouldCreateCorrectPath() {
-        OrnsteinUhlenbeck predictor = predictor().alpha(0.5).sigma(Temp.celsius(1));
-        TempSeries series = predictor.predict(date1, date3);
+        OrnsteinUhlenbeck predictor = predictor().alpha(0.25).sigma(Temp.celsius(1));
+        TempSeries series = predictor.predict(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-01-10"));
         assertThat(series.round(2)).containsExactly(
-            TempSeries.entry(date1, Temp.celsius(0.8)),
-            TempSeries.entry(date2, Temp.celsius(-0.5))
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.celsius(0.8)),
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.celsius(-0.3)),
+            TempSeries.entry(LocalDate.parse("2020-01-03"), Temp.celsius(1.86)),
+            TempSeries.entry(LocalDate.parse("2020-01-04"), Temp.celsius(2.16)),
+            TempSeries.entry(LocalDate.parse("2020-01-05"), Temp.celsius(2.6)),
+            TempSeries.entry(LocalDate.parse("2020-01-06"), Temp.celsius(0.27)),
+            TempSeries.entry(LocalDate.parse("2020-01-07"), Temp.celsius(0.17)),
+            TempSeries.entry(LocalDate.parse("2020-01-08"), Temp.celsius(0.25)),
+            TempSeries.entry(LocalDate.parse("2020-01-09"), Temp.celsius(-0.21))
         );
     }
 }
