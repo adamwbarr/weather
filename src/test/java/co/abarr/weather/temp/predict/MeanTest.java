@@ -12,14 +12,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Created by adam on 01/12/2020.
  */
-class MeanTrainerTest {
+class MeanTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
     private final LocalDate date3 = LocalDate.parse("2020-01-03");
     private final LocalDate date4 = LocalDate.parse("2020-01-04");
     private final LocalDate date5 = LocalDate.parse("2020-01-05");
 
-    private final MeanTrainer trainer = new MeanTrainer();
+    private final Mean trainer = new Mean();
 
     @Test
     void train_OnEmptySeries_ShouldThrowException() {

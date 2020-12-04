@@ -1,5 +1,6 @@
 package co.abarr.weather.temp.predict;
 
+import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempSeries;
 import co.abarr.weather.time.DateRange;
 
@@ -21,5 +22,12 @@ public interface TempPredictor {
      */
     default TempSeries predict(LocalDate start, LocalDate end) {
         return predict(DateRange.of(start, end));
+    }
+
+    /**
+     * Predicts the same temperature for all dates.
+     */
+    static TempPredictor of(Temp temp) {
+        return new Constant(temp);
     }
 }

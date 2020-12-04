@@ -7,7 +7,7 @@ import java.util.Objects;
  * <p>
  * Created by adam on 30/11/2020.
  */
-public class Temp extends Number implements Comparable<Temp> {
+public class Temp extends Number implements Comparable<Temp>, TempUnits.Holder<Temp> {
     private final double value;
     private final TempUnits units;
 
@@ -54,63 +54,17 @@ public class Temp extends Number implements Comparable<Temp> {
     /**
      * The units of this temperature.
      */
+    @Override
     public TempUnits units() {
         return units;
     }
 
     /**
-     * Converts this temperature to Kelvins.
-     */
-    public Temp toKelvin() {
-        return to(TempUnits.KELVIN);
-    }
-
-    /**
-     * Converts this temperature to Fahrenheit.
-     */
-    public Temp toFahrenheit() {
-        return to(TempUnits.FAHRENHEIT);
-    }
-
-    /**
-     * Converts this temperature to Celsius.
-     */
-    public Temp toCelsius() {
-        return to(TempUnits.CELSIUS);
-    }
-
-    /**
-     * Converts this temperature to the units of the supplied temperature.
-     */
-    public Temp toUnitsOf(Temp o) {
-        return to(o.units);
-    }
-
-    /**
      * Converts this temperature to the supplied units.
      */
+    @Override
     public Temp to(TempUnits units) {
-        if (this.units == units) {
-            return this;
-        } else {
-            return fromKelvin(kelvin(), units);
-        }
-    }
-
-    private double kelvin() {
-        return switch (units) {
-            case KELVIN -> value;
-            case FAHRENHEIT -> (value - 32) * 5.0 / 9.0 + 273.15;
-            case CELSIUS -> value + 273.15;
-        };
-    }
-
-    private static Temp fromKelvin(double kelvin, TempUnits unit) {
-        return switch (unit) {
-            case KELVIN -> kelvin(kelvin);
-            case FAHRENHEIT -> fahrenheit((kelvin - 273.15) * 9.0 / 5.0 + 32);
-            case CELSIUS -> celsius(kelvin - 273.15);
-        };
+        return Temp.of(units.convert(value, this.units), units);
     }
 
     /**

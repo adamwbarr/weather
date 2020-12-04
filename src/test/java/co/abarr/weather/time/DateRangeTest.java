@@ -53,4 +53,16 @@ class DateRangeTest {
         DateRange range = DateRange.of(date1, date3);
         assertThat(range.size()).isEqualTo(2);
     }
+
+    @Test
+    void offsetStart_WithNegativeOffset_ShouldUpdateStartCorrectly() {
+        DateRange range = DateRange.of(date2, date3);
+        assertThat(range.offsetStart(-1).start()).isEqualTo(date1);
+    }
+
+    @Test
+    void offsetEnd_WithNegativeOffset_ShouldUpdateEndCorrectly() {
+        DateRange range = DateRange.of(date1, date2);
+        assertThat(range.offsetEnd(1).end()).isEqualTo(date3);
+    }
 }

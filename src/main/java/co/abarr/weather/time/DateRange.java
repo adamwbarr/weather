@@ -28,10 +28,38 @@ public final class DateRange {
     }
 
     /**
+     * Offsets the start of the date range.
+     */
+    public DateRange offsetStart(int offset) {
+        return new DateRange(start.plusDays(offset), end);
+    }
+
+    /**
+     * Updates the start of the date range.
+     */
+    public DateRange start(LocalDate start) {
+        return new DateRange(start, end);
+    }
+
+    /**
      * The end of the date range.
      */
     public LocalDate end() {
         return end;
+    }
+
+    /**
+     * Offsets the end of the date range.
+     */
+    public DateRange offsetEnd(int offset) {
+        return new DateRange(start, end.plusDays(offset));
+    }
+
+    /**
+     * Updates the end of the date range.
+     */
+    public DateRange end(LocalDate end) {
+        return new DateRange(start, end);
     }
 
     /**

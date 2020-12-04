@@ -3,6 +3,8 @@ package co.abarr.weather.temp;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.Year;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -15,7 +17,7 @@ import java.util.function.Function;
  * <p>
  * Created by adam on 03/12/2020.
  */
-public class TempSeries extends AbstractList<TempSeries.Entry> {
+public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUnits.Holder<TempSeries> {
     private final TempVector<LocalDate> temps;
 
     private TempSeries(TempVector<LocalDate> temps) {
@@ -39,15 +41,23 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
     }
 
     /**
-     * Groups this series into sub-series by function.
+     * The units of all temperatures in this vector.
      */
-    public <G> Map<G, TempSeries> groupBy(Function<LocalDate, G> grouper) {
-        Map<G, TempVector<LocalDate>> groups = temps.groupBy(grouper);
-        Map<G, TempSeries> series = new HashMap<>(groups.size());
-        for (Map.Entry<G, TempVector<LocalDate>> entry : groups.entrySet()) {
-            series.put(entry.getKey(), of(entry.getValue()));
+    @Override
+    public TempUnits units() {
+        return temps.units();
+    }
+
+    /**
+     * Converts all temperatures in this vector to the supplied units.
+     */
+    @Override
+    public TempSeries to(TempUnits units) {
+        if (units().equals(units)) {
+            return this;
+        } else {
+            return new TempSeries(temps.to(units));
         }
-        return series;
     }
 
     /**
@@ -57,6 +67,15 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
      */
     public TempSeries map(BiFunction<LocalDate, Temp, Temp> transform) {
         return new TempSeries(temps.map(transform));
+    }
+
+    /**
+     * Subtracts the supplied series from this one.
+     * <p>
+     * An exception will be thrown if the dates do not match.
+     */
+    public TempSeries minus(TempSeries o) {
+        return new TempSeries(temps.minus(o.temps));
     }
 
     /**
@@ -70,7 +89,7 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
      * The mean of the series, if there is one.
      */
     public Optional<Temp> mean() {
-       return temps.mean();
+        return temps.mean();
     }
 
     /**
@@ -79,7 +98,77 @@ public class TempSeries extends AbstractList<TempSeries.Entry> {
      * No result will be returned if there are fewer than two entries in the series.
      */
     public Optional<Temp> qvar() {
-       return temps.qvar();
+        return temps.qvar();
+    }
+
+    /**
+     * Rounds all temperatures to some number of decimal places.
+     */
+    public TempSeries round(int places) {
+        return new TempSeries(temps.round(places));
+    }
+
+    /**
+     * Groups this series into one subseries per-year.
+     */
+    public Grouping<Year> groupByYear() {
+        return groupBy(Year::from);
+    }
+
+    /**
+     * Groups this series into one subseries per-month.
+     */
+    public Grouping<Month> groupByMonth() {
+        return groupBy(Month::from);
+    }
+
+    private <G extends Comparable<G>> Grouping<G> groupBy(Function<LocalDate, G> grouper) {
+        Map<G, List<Entry>> lists = new TreeMap<>();
+        for (Entry entry : this) {
+            G group = grouper.apply(entry.date());
+            lists.computeIfAbsent(group, key -> new ArrayList<>()).add(entry);
+        }
+        Map<G, TempSeries> groups = new TreeMap<>();
+        for (Map.Entry<G, List<Entry>> entry : lists.entrySet()) {
+            groups.put(entry.getKey(), of(entry.getValue()));
+        }
+        return new Grouping<>(groups);
+    }
+
+    /**
+     * The result of grouping a series into distinct subseries.
+     */
+    public static class Grouping<G> extends AbstractMap<G, TempSeries> {
+        private final Map<G, TempSeries> groups;
+
+        private Grouping(Map<G, TempSeries> groups) {
+            this.groups = groups;
+        }
+
+        /**
+         * The series for the supplied key, if there is one.
+         */
+        @Override
+        public TempSeries get(Object key) {
+            return groups.get(key);
+        }
+
+        /**
+         * An iterator over the groups in the grouping.
+         */
+        @Override
+        public Set<Entry<G, TempSeries>> entrySet() {
+            return Collections.unmodifiableSet(groups.entrySet());
+        }
+
+        /**
+         * Reduces each series to a single temperature.
+         * <p>
+         * Null temperatures will be excluded from the resulting vector.
+         */
+        public TempVector<G> reduce(Function<TempSeries, Temp> reducer) {
+            return TempVector.of(groups, reducer);
+        }
     }
 
     /**

@@ -3,11 +3,12 @@ package co.abarr.weather.temp;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.Year;
+import java.util.HashMap;
 import java.util.Map;
 
 import static co.abarr.weather.temp.TempVector.Entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -34,6 +35,15 @@ class TempVectorTest {
             TempVector.entry(date1, Temp.celsius(6)),
             TempVector.entry(date2, Temp.celsius(5))
         );
+    }
+
+    @Test
+    void of_FactoryFunction_ShouldExcludeNulls() {
+        Map<LocalDate, Temp> items = new HashMap<>();
+        items.put(date1, Temp.celsius(6));
+        items.put(date2, null);
+        TempVector<LocalDate> vector = TempVector.of(items, temp -> temp);
+        assertThat(vector).containsExactly(TempVector.entry(date1, Temp.celsius(6)));
     }
 
     @Test
@@ -66,6 +76,24 @@ class TempVectorTest {
             TempVector.entry(date2, Temp.fahrenheit(41))
         );
         assertThat(vector.get(1)).isEqualTo(TempVector.entry(date2, Temp.fahrenheit(41)));
+    }
+
+    @Test
+    void get_OfValidKey_ShouldBeCorrect() {
+        TempVector<LocalDate> vector = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(40)),
+            TempVector.entry(date2, Temp.fahrenheit(41))
+        );
+        assertThat(vector.get(date1)).contains(Temp.fahrenheit(40));
+    }
+
+    @Test
+    void get_OfInvalidKey_ShouldBeEmpty() {
+        TempVector<LocalDate> vector = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(40)),
+            TempVector.entry(date2, Temp.fahrenheit(41))
+        );
+        assertThat(vector.get(date3)).isEmpty();
     }
 
     @Test
@@ -109,38 +137,6 @@ class TempVectorTest {
             TempVector.entry(date3, Temp.fahrenheit(44))
         );
         assertThat(vector.qvar()).contains(Temp.fahrenheit(8));
-    }
-
-    @Test
-    void groupBy_WhenEmpty_ReturnsEmptyMap() {
-        assertThat(TempVector.<LocalDate>empty().groupBy(Year::from)).isEmpty();
-    }
-
-    @Test
-    void groupBy_WhenMultipleGroups_ReturnsCorrectGroups() {
-        TempVector<LocalDate> temps = TempVector.of(
-            TempVector.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
-            TempVector.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
-            TempVector.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
-        );
-        Map<Year, TempVector<LocalDate>> byYear = temps.groupBy(Year::from);
-        assertThat(byYear).containsOnlyKeys(Year.of(2019), Year.of(2020));
-    }
-
-    @Test
-    void byYear_WhenMultipleYears_ReturnsCorrectVectorForYear() {
-        TempVector<LocalDate> temps = TempVector.of(
-            TempVector.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
-            TempVector.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
-            TempVector.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
-        );
-        Map<Year, TempVector<LocalDate>> byYear = temps.groupBy(Year::from);
-        assertThat(byYear.get(Year.of(2019))).isEqualTo(
-            TempVector.of(
-                TempVector.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
-                TempVector.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62))
-            )
-        );
     }
 
     @Test
@@ -190,5 +186,54 @@ class TempVectorTest {
             TempVector.entry(date2, Temp.fahrenheit(62)),
             TempVector.entry(date3, Temp.fahrenheit(61))
         );
+    }
+
+    @Test
+    void to_SameUnits_ShouldReturnSelf() {
+        TempVector<LocalDate> vector = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(41)),
+            TempVector.entry(date2, Temp.fahrenheit(50))
+        );
+        assertThat(vector.toFahrenheit()).isEqualTo(vector);
+    }
+
+    @Test
+    void to_DifferentUnits_ShouldConvertCorrectly() {
+        TempVector<LocalDate> vector = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(41)),
+            TempVector.entry(date2, Temp.fahrenheit(50))
+        );
+        assertThat(vector.toCelsius()).containsExactly(
+            TempVector.entry(date1, Temp.celsius(5)),
+            TempVector.entry(date2, Temp.celsius(10))
+        );
+    }
+
+    @Test
+    void minus_WithKeyMismatch_ShouldThrowException() {
+        TempVector<LocalDate> x = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(4))
+        );
+        TempVector<LocalDate> y = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(3)),
+            TempVector.entry(date2, Temp.fahrenheit(2))
+        );
+        assertThatThrownBy(() -> x.minus(y)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void minus_WithSameKeys_ShouldSubtractCorrectly() {
+        TempVector<LocalDate> x = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(4)),
+            TempVector.entry(date2, Temp.fahrenheit(5))
+        );
+        TempVector<LocalDate> y = TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(3)),
+            TempVector.entry(date2, Temp.fahrenheit(2))
+        );
+        assertThat(x.minus(y)).isEqualTo(TempVector.of(
+            TempVector.entry(date1, Temp.fahrenheit(1)),
+            TempVector.entry(date2, Temp.fahrenheit(3))
+        ));
     }
 }

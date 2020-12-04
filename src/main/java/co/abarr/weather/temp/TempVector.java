@@ -1,5 +1,7 @@
 package co.abarr.weather.temp;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -12,7 +14,7 @@ import java.util.function.Function;
  * <p>
  * Created by adam on 01/12/2020.
  */
-public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
+public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements TempUnits.Holder<TempVector<K>> {
     private final List<K> keys;
     private final double[] values;
     private final TempUnits units;
@@ -32,6 +34,18 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
     }
 
     /**
+     * The temp for the supplied key.
+     */
+    public Optional<Temp> get(K key) {
+        int index = keys.indexOf(key);
+        if (index == -1) {
+            return Optional.empty();
+        } else {
+            return Optional.of(tempAt(index));
+        }
+    }
+
+    /**
      * The number of entries in the vector.
      */
     @Override
@@ -40,19 +54,27 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
     }
 
     /**
-     * Groups this vector into sub-vector by function.
+     * The units of all temperatures in this vector.
      */
-    public <G> Map<G, TempVector<K>> groupBy(Function<K, G> grouper) {
-        Map<G, List<Entry<K>>> lists = new LinkedHashMap<>();
-        for (Entry<K> entry : this) {
-            G group = grouper.apply(entry.key);
-            lists.computeIfAbsent(group, key -> new ArrayList<>()).add(entry);
+    @Override
+    public TempUnits units() {
+        return units;
+    }
+
+    /**
+     * Converts all temperatures in this vector to the supplied units.
+     */
+    @Override
+    public TempVector<K> to(TempUnits units) {
+        if (this.units == units) {
+            return this;
+        } else {
+            double[] converted = new double[size()];
+            for (int i = 0; i < keys.size(); i++) {
+                converted[i] = units.convert(values[i], this.units);
+            }
+            return new TempVector<>(keys, converted, units);
         }
-        Map<G, TempVector<K>> groups = new LinkedHashMap<>();
-        for (Map.Entry<G, List<Entry<K>>> entry : lists.entrySet()) {
-            groups.put(entry.getKey(), of(entry.getValue()));
-        }
-        return groups;
     }
 
     /**
@@ -77,6 +99,24 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
         List<Entry<K>> entries = new ArrayList<>(this);
         entries.sort(Comparator.comparing(entry -> (Comparable) entry.key));
         return of(entries);
+    }
+
+    /**
+     * Subtracts the supplied vector from this one.
+     * <p>
+     * An exception will be thrown if the keys do not match.
+     */
+    public TempVector<K> minus(TempVector<K> o) {
+        o = o.toUnitsOf(this);
+        if (keys.equals(o.keys)) {
+            double[] result = new double[size()];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = values[i] - o.values[i];
+            }
+            return new TempVector<>(keys, result, units);
+        } else {
+            throw new IllegalArgumentException(String.format("Mismatched keys:\n%s\n%s", keys, o.keys));
+        }
     }
 
     /**
@@ -116,6 +156,18 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
             }
             return Optional.of(Temp.of(sum, units));
         }
+    }
+
+    /**
+     * Rounds all temperatures to some number of decimal places.
+     */
+    public TempVector<K> round(int places) {
+        double[] rounded = new double[size()];
+        for (int i = 0; i < rounded.length; i++) {
+            BigDecimal decimal = BigDecimal.valueOf(values[i]).setScale(places, RoundingMode.HALF_UP);
+            rounded[i] = decimal.doubleValue();
+        }
+        return new TempVector<>(keys, rounded, units);
     }
 
     private Temp tempAt(int index) {
@@ -194,7 +246,14 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
      * Creates a vector from a factory function.
      */
     public static <K> TempVector<K> of(Iterable<K> keys, Function<K, Temp> temp) {
-        return of(keys, key -> key, temp::apply);
+        return of(keys, key -> key, temp);
+    }
+
+    /**
+     * Creates a vector from a factory function.
+     */
+    public static <K, T> TempVector<K> of(Map<K, T> items, Function<T, Temp> temp) {
+        return of(items.entrySet(), Map.Entry::getKey, entry -> temp.apply(entry.getValue()));
     }
 
     /**
@@ -231,6 +290,7 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
      * Creates a vector containing the supplied temperatures.
      */
     public static <K> TempVector<K> of(Map<K, Temp> map) {
+        map = removeNulls(map);
         List<K> keys = new ArrayList<>(map.size());
         keys.addAll(map.keySet());
         TempUnits units;
@@ -244,5 +304,16 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
             temps[i] = map.get(keys.get(i)).to(units).doubleValue();
         }
         return new TempVector<>(keys, temps, units);
+    }
+
+    private static <K> Map<K, Temp> removeNulls(Map<K, Temp> map) {
+        Map<K, Temp> cleaned = new LinkedHashMap<>(map.size());
+        for (Map.Entry<K, Temp> entry : map.entrySet()) {
+            Temp value = entry.getValue();
+            if (value != null) {
+                cleaned.put(entry.getKey(), value);
+            }
+        }
+        return cleaned;
     }
 }

@@ -1,9 +1,6 @@
 package co.abarr.weather.temp.predict;
 
 import co.abarr.weather.temp.TempSeries;
-import co.abarr.weather.temp.TempVector;
-
-import java.time.LocalDate;
 
 /**
  * API for classes that create temperature predictos.
@@ -19,5 +16,5 @@ public interface TempTrainer {
     /**
      * A simplistic model that just returns the mean of the training data.
      */
-    TempTrainer MEAN = new MeanTrainer();
+    TempTrainer MEAN = new Mean();
 }

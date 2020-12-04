@@ -6,13 +6,13 @@ import co.abarr.weather.temp.TempSeries;
 /**
  * Created by adam on 01/12/2020.
  */
-class MeanTrainer implements TempTrainer {
+class Mean implements TempTrainer {
     public TempPredictor train(TempSeries train) {
         Temp mean = train.mean().orElse(null);
         if (mean == null) {
             throw new IllegalArgumentException("Empty training series");
         } else {
-            return range -> TempSeries.of(range, date -> mean);
+            return TempPredictor.of(mean);
         }
     }
 }

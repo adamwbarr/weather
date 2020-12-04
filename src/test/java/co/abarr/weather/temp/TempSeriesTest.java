@@ -8,14 +8,15 @@ import java.util.Map;
 
 import static co.abarr.weather.temp.TempSeries.Entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
  */
 class TempSeriesTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
-    private final LocalDate date3 = LocalDate.parse("2020-01-03");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
+    private final LocalDate date3 = LocalDate.parse("2020-01-03");
 
     @Test
     void of_DuplicateEntries_ShouldRetainLatest() {
@@ -121,28 +122,28 @@ class TempSeriesTest {
 
     @Test
     void groupBy_WhenEmpty_ReturnsEmptyMap() {
-        assertThat(TempSeries.<LocalDate>empty().groupBy(Year::from)).isEmpty();
+        assertThat(TempSeries.empty().groupByYear()).isEmpty();
     }
 
     @Test
-    void groupBy_WhenMultipleGroups_ReturnsCorrectGroups() {
+    void groupByYear_WhenMultipleGroups_ReturnsCorrectGroups() {
         TempSeries temps = TempSeries.of(
             TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
             TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
             TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
         );
-        Map<Year, TempSeries> byYear = temps.groupBy(Year::from);
+        Map<Year, TempSeries> byYear = temps.groupByYear();
         assertThat(byYear).containsOnlyKeys(Year.of(2019), Year.of(2020));
     }
 
     @Test
-    void byYear_WhenMultipleYears_ReturnsCorrectSeriesForYear() {
+    void groupByYear_WhenMultipleYears_ReturnsCorrectSeriesForYear() {
         TempSeries temps = TempSeries.of(
             TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
             TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
             TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
         );
-        Map<Year, TempSeries> byYear = temps.groupBy(Year::from);
+        Map<Year, TempSeries> byYear = temps.groupByYear();
         assertThat(byYear.get(Year.of(2019))).isEqualTo(
             TempSeries.of(
                 TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
@@ -167,6 +168,66 @@ class TempSeriesTest {
         assertThat(mapped).isEqualTo(TempSeries.of(
             TempSeries.entry(date1, Temp.fahrenheit(67)),
             TempSeries.entry(date2, Temp.fahrenheit(63))
+        ));
+    }
+
+    @Test
+    void reduce_OfEmptyGrouping_ShouldReturnEmptyVector() {
+        TempVector<Year> vector = TempSeries.empty().groupByYear().reduce(TempSeries::sum);
+        assertThat(vector).isEmpty();
+    }
+
+    @Test
+    void reduce_OfNonEmptyGrouping_ShouldReturnValidValues() {
+        TempSeries series = TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(1)),
+            TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(2)),
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(4))
+        );
+        TempVector<Year> vector = series.groupByYear().reduce(TempSeries::sum);
+        assertThat(vector).containsExactly(
+            TempVector.entry(Year.of(2019), Temp.fahrenheit(3)),
+            TempVector.entry(Year.of(2020), Temp.fahrenheit(4))
+        );
+    }
+
+    @Test
+    void reduce_OfNonEmptyGrouping_ShouldExcludeNulls() {
+        TempSeries series = TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(1)),
+            TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(2)),
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(4))
+        );
+        TempVector<Year> vector = series.groupByYear().reduce(year -> year.qvar().orElse(null));
+        assertThat(vector.get(Year.of(2020))).isEmpty();
+    }
+
+
+    @Test
+    void minus_WithKeyMismatch_ShouldThrowException() {
+        TempSeries x = TempSeries.of(
+            TempSeries.entry(date1, Temp.fahrenheit(4))
+        );
+        TempSeries y = TempSeries.of(
+            TempSeries.entry(date1, Temp.fahrenheit(3)),
+            TempSeries.entry(date2, Temp.fahrenheit(2))
+        );
+        assertThatThrownBy(() -> x.minus(y)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void minus_WithSameKeys_ShouldSubtractCorrectly() {
+        TempSeries x = TempSeries.of(
+            TempSeries.entry(date1, Temp.fahrenheit(4)),
+            TempSeries.entry(date2, Temp.fahrenheit(5))
+        );
+        TempSeries y = TempSeries.of(
+            TempSeries.entry(date1, Temp.fahrenheit(3)),
+            TempSeries.entry(date2, Temp.fahrenheit(2))
+        );
+        assertThat(x.minus(y)).isEqualTo(TempSeries.of(
+            TempSeries.entry(date1, Temp.fahrenheit(1)),
+            TempSeries.entry(date2, Temp.fahrenheit(2))
         ));
     }
 }
