@@ -13,12 +13,13 @@ class Hdd implements TempIndexer {
     }
 
     @Override
-    public Temp indexFor(Temp temp) {
-        temp = temp.toUnitsOf(reference);
-        if (temp.compareTo(reference) < 0) {
-            return reference.minus(temp);
-        } else {
-            return Temp.zero(reference.units());
+    public Temp indexFor(TempSeries series) {
+        Temp index = Temp.zero(reference.units());
+        for (TempSample sample : series) {
+            if (sample.temp().compareTo(reference) < 0) {
+                index = index.plus(reference.minus(sample.temp()));
+            }
         }
+        return index;
     }
 }

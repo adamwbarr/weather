@@ -91,24 +91,6 @@ public final class TempSeries extends AbstractList<TempSample> {
     }
 
     /**
-     * Calculates an index from this series.
-     * <p>
-     * The resulting index value is the sum of applying the indexer to each
-     * sample in this series.
-     */
-    public Temp index(TempIndexer indexer) {
-        if (isEmpty()) {
-            return Temp.zero(indexer.indexFor(Temp.kelvin(0)).units());
-        } else {
-            Temp sum = indexer.indexFor(tempAt(0));
-            for (int i = 0; i < size(); i++) {
-                sum = sum.plus(indexer.indexFor(tempAt(i)));
-            }
-            return sum;
-        }
-    }
-
-    /**
      * The sum of the series.
      */
     public Temp sum() {

@@ -9,7 +9,7 @@ public interface TempIndexer {
     /**
      * Calculates the index value for a given temperature.
      */
-    Temp indexFor(Temp temp);
+    Temp indexFor(TempSeries series);
 
     /**
      * Calculates a HDD (heating-degree-day) index.

@@ -119,26 +119,6 @@ class TempSeriesTest {
     }
 
     @Test
-    void hdd_OfEmptySeries_ShouldBeInReferenceUnits() {
-        TempSeries temps = TempSeries.empty();
-        TempIndexer indexer = TempIndexer.hdd(Temp.fahrenheit(65));
-        Temp hdd = temps.index(indexer);
-        assertThat(hdd).isEqualTo(Temp.fahrenheit(0));
-    }
-
-    @Test
-    void hdd_OfValidSeries_ShouldBeCorrect() {
-        TempSeries temps = TempSeries.of(
-            Temp.fahrenheit(66).on(date1),
-            Temp.fahrenheit(62).on(date2),
-            Temp.fahrenheit(60).on(date3)
-        );
-        TempIndexer indexer = TempIndexer.hdd(Temp.fahrenheit(65));
-        Temp hdd = temps.index(indexer);
-        assertThat(hdd).isEqualTo(Temp.fahrenheit(8));
-    }
-
-    @Test
     void byYear_WhenEmpty_ReturnsEmptyMap() {
         assertThat(TempSeries.empty().groupByYear()).isEmpty();
     }
