@@ -109,6 +109,13 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
     }
 
     /**
+     * Calculates an index from this series.
+     */
+    public Temp apply(TempIndexer indexer) {
+        return indexer.indexFor(this);
+    }
+
+    /**
      * Rounds all temperatures to some number of decimal places.
      */
     public TempSeries round(int places) {

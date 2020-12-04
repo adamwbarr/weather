@@ -1,7 +1,5 @@
 package co.abarr.weather.temp;
 
-import java.time.LocalDate;
-
 /**
  * Pluggable logic for calculating temperature index values.
  * <p>
@@ -11,7 +9,7 @@ public interface TempIndexer {
     /**
      * Calculates the index value for a given temperature vector.
      */
-    Temp indexFor(TempVector<LocalDate> series);
+    Temp indexFor(TempSeries series);
 
     /**
      * Calculates a HDD (heating-degree-day) index.

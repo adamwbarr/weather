@@ -99,13 +99,6 @@ class FromCsvTest {
         );
     }
 
-    @Test
-    @Tag("integration")
-    void readFromCentralParkCsv_WhenExists_ShouldLoadCorrectNumberOfRows() {
-        List<OwmRow> rows = FromCsv.readFromCentralParkCsv();
-        assertThat(rows).hasSize(405013);
-    }
-
     private List<OwmRow> parseRows(String s) {
         return FromCsv.readFrom(s);
     }

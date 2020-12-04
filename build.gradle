@@ -19,6 +19,26 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.0"
 }
 
+sourceSets {
+    integration {
+        java.srcDir "src/integration/java"
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+        resources.srcDir "src/integration/resources"
+    }
+}
+
+configurations {
+    integrationImplementation.extendsFrom testImplementation
+    integrationRuntime.extendsFrom testRuntime
+}
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integration.output.classesDirs
+    classpath = sourceSets.integration.runtimeClasspath
+}
+
+check.dependsOn integrationTest
+
 test {
     useJUnitPlatform()
 }
