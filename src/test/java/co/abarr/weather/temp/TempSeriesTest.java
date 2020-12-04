@@ -17,6 +17,7 @@ class TempSeriesTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
     private final LocalDate date3 = LocalDate.parse("2020-01-03");
+    private final LocalDate date4 = LocalDate.parse("2020-01-04");
 
     @Test
     void of_DuplicateEntries_ShouldRetainLatest() {
@@ -115,9 +116,10 @@ class TempSeriesTest {
         TempSeries series = TempSeries.of(
             TempSeries.entry(date1, Temp.fahrenheit(40)),
             TempSeries.entry(date2, Temp.fahrenheit(42)),
-            TempSeries.entry(date3, Temp.fahrenheit(44))
+            TempSeries.entry(date3, Temp.fahrenheit(44)),
+            TempSeries.entry(date4, Temp.fahrenheit(44))
         );
-        assertThat(series.qvar()).contains(Temp.fahrenheit(8));
+        assertThat(series.qvar()).contains(Temp.fahrenheit(2));
     }
 
     @Test
@@ -227,7 +229,7 @@ class TempSeriesTest {
         );
         assertThat(x.minus(y)).isEqualTo(TempSeries.of(
             TempSeries.entry(date1, Temp.fahrenheit(1)),
-            TempSeries.entry(date2, Temp.fahrenheit(2))
+            TempSeries.entry(date2, Temp.fahrenheit(3))
         ));
     }
 }

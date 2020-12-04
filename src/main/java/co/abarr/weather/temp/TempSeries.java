@@ -33,6 +33,13 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
     }
 
     /**
+     * The temp for the supplied date.
+     */
+    public Optional<Temp> get(LocalDate date) {
+        return temps.get(date);
+    }
+
+    /**
      * The number of entries in the series.
      */
     @Override

@@ -144,7 +144,7 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     /**
      * The quadratic variation of the vector.
      * <p>
-     * No result will be returned if there are fewer than two entries in the vector.
+     * No result will be returned if there are insufficient entries in the vector.
      */
     public Optional<Temp> qvar() {
         if (size() < 2) {
@@ -154,7 +154,7 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
             for (int i = 1; i < size(); i++) {
                 sum += Math.pow(values[i] - values[i - 1], 2);
             }
-            return Optional.of(Temp.of(sum, units));
+            return Optional.of(Temp.of(sum / size(), units));
         }
     }
 

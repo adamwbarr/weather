@@ -4,13 +4,23 @@ import co.abarr.weather.owm.OwmBatch;
 import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempSeries;
 import co.abarr.weather.temp.TempVector;
+import co.abarr.weather.time.DateRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.Month;
+import java.time.Year;
 import java.util.Arrays;
 
 /**
+ * Alaton forecast model.
+ * <p>
+ * Implements the model described in the paper "On Modelling and Pricing
+ * Weather Derivatives" by Alaton, Djehiche and Stillberger.
+ * <p>
+ * See https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.198.6547&rep=rep1&type=pdf.
+ * <p>
  * Created by adam on 03/12/2020.
  */
 public class Alaton implements TempTrainer {
@@ -54,11 +64,16 @@ public class Alaton implements TempTrainer {
     private double[] qvarByMonth(TempSeries temps) {
         return toOrdinalArray(
             temps.groupByMonth().reduce(
-                months -> months.groupByYear().reduce(
-                    month -> month.qvar().orElse(null)
-                ).mean().orElse(
-                    null
-                )
+                months -> {
+                    TempVector<Year> x = months.groupByYear().reduce(
+                        month -> {
+                            return month.qvar().orElse(null);
+                        }
+                    );
+                    return x.mean().orElse(
+                        null
+                    );
+                }
             )
         );
     }
@@ -74,11 +89,12 @@ public class Alaton implements TempTrainer {
 
     public static void main(String[] args) {
         Alaton alaton = new Alaton();
-        TempSeries observed = OwmBatch.centralParkCsv().maxs().toFahrenheit();
+        TempSeries observed = OwmBatch.centralParkCsv().maxs().toCelsius();
         TempPredictor predictor = alaton.train(observed);
-        TempSeries predicted = predictor.predict(observed.get(0).date(), observed.get(observed.size() - 1).date().plusDays(1));
-        for (int i = 0; i < predicted.size(); i++) {
-            System.out.println(observed.get(i).date() + " " + observed.get(i).temp() + " " + predicted.get(i).temp());
+        TempSeries predicted = predictor.predict(DateRange.year(2020));
+        for (TempSeries.Entry entry : predicted) {
+            LocalDate date = entry.date();
+            System.out.println(date + " " + observed.get(date).orElse(null) + " " + entry.temp());
         }
     }
 }

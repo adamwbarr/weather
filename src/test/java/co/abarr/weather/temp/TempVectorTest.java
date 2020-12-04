@@ -15,8 +15,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class TempVectorTest {
     private final LocalDate date1 = LocalDate.parse("2020-01-01");
-    private final LocalDate date3 = LocalDate.parse("2020-01-03");
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
+    private final LocalDate date3 = LocalDate.parse("2020-01-03");
+    private final LocalDate date4 = LocalDate.parse("2020-01-04");
 
     @Test
     void of_DuplicateEntries_ShouldRetainLatest() {
@@ -134,9 +135,10 @@ class TempVectorTest {
         TempVector<LocalDate> vector = TempVector.of(
             TempVector.entry(date1, Temp.fahrenheit(40)),
             TempVector.entry(date2, Temp.fahrenheit(42)),
-            TempVector.entry(date3, Temp.fahrenheit(44))
+            TempVector.entry(date3, Temp.fahrenheit(44)),
+            TempVector.entry(date4, Temp.fahrenheit(44))
         );
-        assertThat(vector.qvar()).contains(Temp.fahrenheit(8));
+        assertThat(vector.qvar()).contains(Temp.fahrenheit(2));
     }
 
     @Test
