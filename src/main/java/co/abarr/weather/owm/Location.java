@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Created by adam on 30/11/2020.
  */
-public final class Location implements Comparable<Location> {
+public class Location implements Comparable<Location> {
     private final String name;
 
     private Location(String name) {

@@ -2,7 +2,6 @@ package co.abarr.weather.owm;
 
 import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempSeries;
-import co.abarr.weather.temp.TempVector;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -12,7 +11,7 @@ import java.util.*;
  * <p>
  * Created by adam on 01/12/2020.
  */
-public final class OwmBatch extends AbstractList<OwmRow> {
+public class OwmBatch extends AbstractList<OwmRow> {
     private final List<OwmRow> rows;
 
     private OwmBatch(List<OwmRow> rows) {

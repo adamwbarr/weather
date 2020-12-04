@@ -8,7 +8,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * A date-keyed and ordered list of temperatures.
+ * A date keyed and ordered list of temperatures.
  * <p>
  * A series is guaranteed to contain at most one entry per date, and all
  * temperatures in the series are guaranteed to have the same units.

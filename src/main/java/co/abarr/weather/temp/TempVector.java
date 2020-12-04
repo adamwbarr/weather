@@ -12,7 +12,7 @@ import java.util.function.Function;
  * <p>
  * Created by adam on 01/12/2020.
  */
-public final class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
+public class TempVector<K> extends AbstractList<TempVector.Entry<K>> {
     private final List<K> keys;
     private final double[] values;
     private final TempUnits units;

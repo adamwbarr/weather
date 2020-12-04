@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p>
  * Created by adam on 30/11/2020.
  */
-public final class OwmRow {
+public class OwmRow {
     private final Location location;
     private final Instant time;
     private final ZoneOffset zone;

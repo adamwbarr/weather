@@ -1,6 +1,5 @@
 package co.abarr.weather.temp;
 
-import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -8,7 +7,7 @@ import java.util.Objects;
  * <p>
  * Created by adam on 30/11/2020.
  */
-public final class Temp extends Number implements Comparable<Temp> {
+public class Temp extends Number implements Comparable<Temp> {
     private final double value;
     private final TempUnits units;
 
