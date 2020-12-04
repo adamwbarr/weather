@@ -8,7 +8,6 @@ import co.abarr.weather.time.DateRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.util.Arrays;
@@ -23,7 +22,7 @@ import java.util.Arrays;
  * <p>
  * Created by adam on 03/12/2020.
  */
-public class Alaton implements TempTrainer {
+class Alaton implements TempTrainer {
     private static final Logger logger = LoggerFactory.getLogger(Alaton.class);
     private final TempTrainer mean = new AlatonMean();
 
@@ -91,10 +90,13 @@ public class Alaton implements TempTrainer {
         Alaton alaton = new Alaton();
         TempSeries observed = OwmBatch.centralParkCsv().maxs().toCelsius();
         TempPredictor predictor = alaton.train(observed);
-        TempSeries predicted = predictor.predict(DateRange.year(2020));
-        for (TempSeries.Entry entry : predicted) {
-            LocalDate date = entry.date();
-            System.out.println(date + " " + observed.get(date).orElse(null) + " " + entry.temp());
+        long t0 = System.currentTimeMillis();
+        for (int i = 0; i < 20000; i++) {
+            TempSeries predicted = predictor.predict(DateRange.year(2020));
+            if (i % 10 == 0) {
+                long d = System.currentTimeMillis() - t0;
+                System.out.printf("Total %dms for %d, mean %.2fms\n", d, i, (d / (double) i));
+            }
         }
     }
 }
