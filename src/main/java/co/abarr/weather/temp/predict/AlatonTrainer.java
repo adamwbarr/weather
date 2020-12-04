@@ -2,7 +2,6 @@ package co.abarr.weather.temp.predict;
 
 import co.abarr.weather.owm.OwmBatch;
 import co.abarr.weather.temp.Temp;
-import co.abarr.weather.temp.TempSample;
 import co.abarr.weather.temp.TempSeries;
 import org.jblas.DoubleMatrix;
 import org.jblas.Solve;
@@ -25,8 +24,8 @@ public class AlatonTrainer implements TempTrainer {
     @Override
     public TempPredictor train(TempSeries train) {
         TempSeries mean = meanFor(train);
-        for (Map.Entry<Month, TempSeries> entry0 : train.groupByMonth().entrySet()) {
-            Map<Year, TempSeries> years = entry0.getValue().groupByYear();
+        for (Map.Entry<Month, TempSeries> entry0 : train.groupBy(Month::from).entrySet()) {
+            Map<Year, TempSeries> years = entry0.getValue().groupBy(Year::from);
             double sum = 0;
             for (Map.Entry<Year, TempSeries> entry1 : years.entrySet()) {
                 sum += entry1.getValue().qvar().get().doubleValue();
@@ -40,10 +39,10 @@ public class AlatonTrainer implements TempTrainer {
         DoubleMatrix X = new DoubleMatrix(train.size(), 4);
         DoubleMatrix y = new DoubleMatrix(train.size());
         for (int i = 0; i < train.size(); i++) {
-            TempSample sample = train.get(i);
-            y.put(i, sample.temp().toCelsius().doubleValue());
+            TempSeries.Entry entry = train.get(i);
+            y.put(i, entry.temp().toCelsius().doubleValue());
             X.put(i, 0, 1);
-            int t = t(origin, sample.date());
+            int t = t(origin, entry.date());
             X.put(i, 1, t);
             X.put(i, 2, Math.sin(W * t));
             X.put(i, 3, Math.cos(W * t));

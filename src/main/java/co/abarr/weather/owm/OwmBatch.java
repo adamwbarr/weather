@@ -2,6 +2,7 @@ package co.abarr.weather.owm;
 
 import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempSeries;
+import co.abarr.weather.temp.TempVector;
 
 import java.time.LocalDate;
 import java.util.*;

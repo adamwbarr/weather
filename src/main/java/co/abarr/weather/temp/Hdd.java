@@ -1,5 +1,6 @@
 package co.abarr.weather.temp;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -13,11 +14,11 @@ class Hdd implements TempIndexer {
     }
 
     @Override
-    public Temp indexFor(TempSeries series) {
+    public Temp indexFor(TempVector<LocalDate> series) {
         Temp index = Temp.zero(reference.units());
-        for (TempSample sample : series) {
-            if (sample.temp().compareTo(reference) < 0) {
-                index = index.plus(reference.minus(sample.temp()));
+        for (TempVector.Entry<LocalDate> entry : series) {
+            if (entry.temp().compareTo(reference) < 0) {
+                index = index.plus(reference.minus(entry.temp()));
             }
         }
         return index;

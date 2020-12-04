@@ -1,6 +1,9 @@
 package co.abarr.weather.temp.predict;
 
 import co.abarr.weather.temp.TempSeries;
+import co.abarr.weather.temp.TempVector;
+
+import java.time.LocalDate;
 
 /**
  * API for classes that create temperature predictos.

@@ -60,13 +60,6 @@ public final class Temp extends Number implements Comparable<Temp> {
     }
 
     /**
-     * Creates a sample containing this temperature.
-     */
-    public TempSample on(LocalDate date) {
-        return TempSample.of(date, this);
-    }
-
-    /**
      * Converts this temperature to Kelvins.
      */
     public Temp toKelvin() {

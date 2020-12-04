@@ -1,14 +1,13 @@
 package co.abarr.weather.temp;
 
-import co.abarr.weather.time.DateRange;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Map;
 
+import static co.abarr.weather.temp.TempSeries.Entry;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Created by adam on 01/12/2020.
@@ -19,27 +18,29 @@ class TempSeriesTest {
     private final LocalDate date2 = LocalDate.parse("2020-01-02");
 
     @Test
-    void of_DuplicateSamples_ShouldRetainLatest() {
-        TempSample sample1 = Temp.fahrenheit(40).on(date1);
-        TempSample sample2 = Temp.fahrenheit(41).on(date1);
-        assertThat(TempSeries.of(sample1, sample2)).containsExactly(sample2);
+    void of_DuplicateEntries_ShouldRetainLatest() {
+        Entry entry1 = TempSeries.entry(date1, Temp.fahrenheit(40));
+        Entry entry2 = TempSeries.entry(date1, Temp.fahrenheit(41));
+        assertThat(TempSeries.of(entry1, entry2)).containsExactly(entry2);
     }
 
     @Test
     void of_UnorderedEntries_ShouldOrderByDate() {
-        TempSample sample1 = Temp.fahrenheit(40).on(date1);
-        TempSample sample2 = Temp.fahrenheit(41).on(date2);
-        TempSeries series = TempSeries.of(sample2, sample1);
-        assertThat(series).containsExactly(sample1, sample2);
+        Entry entry1 = TempSeries.entry(date1, Temp.fahrenheit(40));
+        Entry entry2 = TempSeries.entry(date2, Temp.fahrenheit(41));
+        TempSeries series = TempSeries.of(entry2, entry1);
+        assertThat(series).containsExactly(entry1, entry2);
     }
 
     @Test
     void of_MismatchedUnits_ShouldConvertToSingleUnit() {
         TempSeries series = TempSeries.of(
-            Temp.celsius(6).on(date1), Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.celsius(6)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
         assertThat(series).containsExactly(
-            Temp.celsius(6).on(date1), Temp.celsius(5).on(date2)
+            TempSeries.entry(date1, Temp.celsius(6)),
+            TempSeries.entry(date2, Temp.celsius(5))
         );
     }
 
@@ -51,8 +52,8 @@ class TempSeriesTest {
     @Test
     void size_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
         assertThat(series).hasSize(2);
     }
@@ -60,19 +61,19 @@ class TempSeriesTest {
     @Test
     void get_OfFirstEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
-        assertThat(series.get(0)).isEqualTo(Temp.fahrenheit(40).on(date1));
+        assertThat(series.get(0)).isEqualTo(TempSeries.entry(date1, Temp.fahrenheit(40)));
     }
 
     @Test
     void get_OfSubsequentEntry_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
-        assertThat(series.get(1)).isEqualTo(Temp.fahrenheit(41).on(date2));
+        assertThat(series.get(1)).isEqualTo(TempSeries.entry(date2, Temp.fahrenheit(41)));
     }
 
     @Test
@@ -83,8 +84,8 @@ class TempSeriesTest {
     @Test
     void sum_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
         assertThat(series.sum()).isEqualTo(Temp.fahrenheit(81));
     }
@@ -97,8 +98,8 @@ class TempSeriesTest {
     @Test
     void mean_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(41).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(41))
         );
         assertThat(series.mean()).contains(Temp.fahrenheit(40.5));
     }
@@ -111,61 +112,61 @@ class TempSeriesTest {
     @Test
     void qvar_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries series = TempSeries.of(
-            Temp.fahrenheit(40).on(date1),
-            Temp.fahrenheit(42).on(date2),
-            Temp.fahrenheit(44).on(date3)
+            TempSeries.entry(date1, Temp.fahrenheit(40)),
+            TempSeries.entry(date2, Temp.fahrenheit(42)),
+            TempSeries.entry(date3, Temp.fahrenheit(44))
         );
         assertThat(series.qvar()).contains(Temp.fahrenheit(8));
     }
 
     @Test
-    void byYear_WhenEmpty_ReturnsEmptyMap() {
-        assertThat(TempSeries.empty().groupByYear()).isEmpty();
+    void groupBy_WhenEmpty_ReturnsEmptyMap() {
+        assertThat(TempSeries.<LocalDate>empty().groupBy(Year::from)).isEmpty();
     }
 
     @Test
-    void byYear_WhenMultipleYears_ReturnsCorrectYears() {
+    void groupBy_WhenMultipleGroups_ReturnsCorrectGroups() {
         TempSeries temps = TempSeries.of(
-            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
-            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
-            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
+            TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
+            TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
         );
-        Map<Year, TempSeries> byYear = temps.groupByYear();
+        Map<Year, TempSeries> byYear = temps.groupBy(Year::from);
         assertThat(byYear).containsOnlyKeys(Year.of(2019), Year.of(2020));
     }
 
     @Test
     void byYear_WhenMultipleYears_ReturnsCorrectSeriesForYear() {
         TempSeries temps = TempSeries.of(
-            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
-            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
-            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
+            TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
+            TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(60))
         );
-        Map<Year, TempSeries> byYear = temps.groupByYear();
+        Map<Year, TempSeries> byYear = temps.groupBy(Year::from);
         assertThat(byYear.get(Year.of(2019))).isEqualTo(
             TempSeries.of(
-                Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
-                Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02"))
+                TempSeries.entry(LocalDate.parse("2019-01-01"), Temp.fahrenheit(66)),
+                TempSeries.entry(LocalDate.parse("2019-01-02"), Temp.fahrenheit(62))
             )
         );
     }
 
     @Test
     void map_OfEmptySeries_ShouldBeEmptySeries() {
-        TempSeries series = TempSeries.empty().map((date, temp) -> temp.toKelvin());
+        TempSeries series = TempSeries.<LocalDate>empty().map((date, temp) -> temp.toKelvin());
         assertThat(series).isEqualTo(TempSeries.empty());
     }
 
     @Test
     void map_OfNonEmptySeries_ShouldBeCorrect() {
         TempSeries raw = TempSeries.of(
-            Temp.fahrenheit(66).on(date1),
-            Temp.fahrenheit(62).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(66)),
+            TempSeries.entry(date2, Temp.fahrenheit(62))
         );
         TempSeries mapped = raw.map((date, temp) -> temp.plus(Temp.fahrenheit(1)));
         assertThat(mapped).isEqualTo(TempSeries.of(
-            Temp.fahrenheit(67).on(date1),
-            Temp.fahrenheit(63).on(date2)
+            TempSeries.entry(date1, Temp.fahrenheit(67)),
+            TempSeries.entry(date2, Temp.fahrenheit(63))
         ));
     }
 }

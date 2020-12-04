@@ -40,7 +40,7 @@ class OwmBatchTest {
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100))
         );
         TempSeries series = batch.maxs();
-        assertThat(series).containsExactly(Temp.kelvin(100).on(LocalDate.parse("2020-01-01")));
+        assertThat(series).containsExactly(TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)));
     }
 
     @Test
@@ -51,8 +51,8 @@ class OwmBatchTest {
         );
         TempSeries series = batch.maxs();
         assertThat(series).containsExactly(
-            Temp.kelvin(100).on(LocalDate.parse("2020-01-01")),
-            Temp.kelvin(120).on(LocalDate.parse("2020-01-02"))
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)),
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.kelvin(120))
         );
     }
 
@@ -64,7 +64,7 @@ class OwmBatchTest {
         );
         TempSeries series = batch.maxs();
         assertThat(series).containsExactly(
-            Temp.kelvin(120).on(LocalDate.parse("2020-01-01"))
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(120))
         );
     }
 }

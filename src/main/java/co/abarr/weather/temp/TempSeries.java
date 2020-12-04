@@ -3,134 +3,146 @@ package co.abarr.weather.temp;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.Year;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * A ordered list of temperature samples.
+ * A date-keyed and ordered list of temperatures.
  * <p>
- * A series is guaranteed to contain at most one sample per date, and all
+ * A series is guaranteed to contain at most one entry per date, and all
  * temperatures in the series are guaranteed to have the same units.
  * <p>
- * Created by adam on 01/12/2020.
+ * Created by adam on 03/12/2020.
  */
-public final class TempSeries extends AbstractList<TempSample> {
-    private final List<LocalDate> dates;
-    private final double[] temps;
-    private final TempUnits units;
+public class TempSeries extends AbstractList<TempSeries.Entry> {
+    private final TempVector<LocalDate> temps;
 
-    private TempSeries(List<LocalDate> dates, double[] temps, TempUnits units) {
-        this.dates = dates;
+    private TempSeries(TempVector<LocalDate> temps) {
         this.temps = temps;
-        this.units = units;
     }
 
     /**
-     * The sample at the supplied index.
+     * The entry at the supplied index.
      */
     @Override
-    public TempSample get(int index) {
-        return TempSample.of(dates.get(index), tempAt(index));
-    }
-
-    private Temp tempAt(int index) {
-        return Temp.of(temps[index], units);
+    public Entry get(int index) {
+        return new Entry(temps.get(index));
     }
 
     /**
-     * The number of samples in the series.
+     * The number of entries in the series.
      */
     @Override
     public int size() {
-        return dates.size();
+        return temps.size();
     }
 
     /**
-     * Groups this series into sub-series by year.
+     * Groups this series into sub-series by function.
      */
-    public Map<Year, TempSeries> groupByYear() {
-        return groupBy(Year::from);
+    public <G> Map<G, TempSeries> groupBy(Function<LocalDate, G> grouper) {
+        Map<G, TempVector<LocalDate>> groups = temps.groupBy(grouper);
+        Map<G, TempSeries> series = new HashMap<>(groups.size());
+        for (Map.Entry<G, TempVector<LocalDate>> entry : groups.entrySet()) {
+            series.put(entry.getKey(), of(entry.getValue()));
+        }
+        return series;
     }
 
     /**
-     * Groups this series into sub-series by year-month.
-     */
-    public Map<Month, TempSeries> groupByMonth() {
-        return groupBy(Month::from);
-    }
-
-    private <G> Map<G, TempSeries> groupBy(Function<LocalDate, G> grouper) {
-        Map<G, List<TempSample>> lists = new LinkedHashMap<>();
-        for (TempSample sample : this) {
-            G group = grouper.apply(sample.date());
-            lists.computeIfAbsent(group, key -> new ArrayList<>()).add(sample);
-        }
-        Map<G, TempSeries> groups = new LinkedHashMap<>();
-        for (Map.Entry<G, List<TempSample>> entry : lists.entrySet()) {
-            groups.put(entry.getKey(), of(entry.getValue()));
-        }
-        return groups;
-    }
-
-    /**
-     * Transforms the samples in this series.
+     * Transforms the entries in this series.
      * <p>
      * The resulting series will contain for the same dates as this one.
      */
     public TempSeries map(BiFunction<LocalDate, Temp, Temp> transform) {
-        double[] mapped = new double[size()];
-        for (int i = 0; i < size(); i++) {
-            LocalDate date = dates.get(i);
-            Temp temp = tempAt(i);
-            mapped[i] = transform.apply(date, temp).to(units).doubleValue();
-        }
-        return new TempSeries(dates, mapped, units);
+        return new TempSeries(temps.map(transform));
     }
 
     /**
      * The sum of the series.
      */
     public Temp sum() {
-        double sum = 0;
-        for (int i = 0; i < size(); i++) {
-            sum += temps[i];
-        }
-        return Temp.of(sum, units);
+        return temps.sum();
     }
 
     /**
      * The mean of the series, if there is one.
      */
     public Optional<Temp> mean() {
-        if (isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(sum().divideBy(size()));
-        }
+       return temps.mean();
     }
 
     /**
      * The quadratic variation of the series.
      * <p>
-     * No result will be returned if there are fewer than two samples in the series.
+     * No result will be returned if there are fewer than two entries in the series.
      */
     public Optional<Temp> qvar() {
-        if (size() < 2) {
-            return Optional.empty();
-        } else {
-            double sum = 0;
-            for (int i = 1; i < size(); i++) {
-                sum += Math.pow(temps[i] - temps[i - 1], 2);
-            }
-            return Optional.of(Temp.of(sum, units));
+       return temps.qvar();
+    }
+
+    /**
+     * Creates a new entry.
+     * <p>
+     * An exception will be thrown if the date or temperature are null.
+     */
+    public static Entry entry(LocalDate date, Temp temp) {
+        return new Entry(TempVector.entry(date, temp));
+    }
+
+    /**
+     * A date and its associated temperature.
+     */
+    public static final class Entry {
+        private final TempVector.Entry<LocalDate> entry;
+
+        private Entry(TempVector.Entry<LocalDate> entry) {
+            this.entry = Objects.requireNonNull(entry);
+        }
+
+        /**
+         * The date with which the temperature is associated.
+         */
+        public LocalDate date() {
+            return entry.key();
+        }
+
+        /**
+         * The temperature associated with the date.
+         */
+        public Temp temp() {
+            return entry.temp();
+        }
+
+        /**
+         * Updates the temperature for the date.
+         */
+        public Entry temp(Temp temp) {
+            return new Entry(entry.temp(temp));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Entry entry = (Entry) o;
+            return this.entry.equals(entry.entry);
+        }
+
+        @Override
+        public int hashCode() {
+            return entry.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return entry.toString();
         }
     }
 
     /**
-     * Creates a series containing no samples.
+     * Creates a series containing no entries.
      */
     public static TempSeries empty() {
         return of();
@@ -140,50 +152,35 @@ public final class TempSeries extends AbstractList<TempSample> {
      * Creates a series from a factory function.
      */
     public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        Map<LocalDate, Temp> map = new HashMap<>();
-        for (LocalDate date : dates.all()) {
-            map.put(date, temp.apply(date));
-        }
-        return of(map);
+        return of(TempVector.of(dates.all(), temp));
     }
 
     /**
-     * Creates a series containing the supplied samples.
-     * <p>
-     * If the units of the supplied temperatures are mismatched, a single
+     * Creates a series containing the supplied entries.
      */
-    public static TempSeries of(TempSample... samples) {
-        return of(Arrays.asList(samples));
+    public static TempSeries of(Entry... entries) {
+        return of(Arrays.asList(entries));
     }
 
     /**
-     * Creates a series containing the supplied samples.
+     * Creates a series containing the supplied entries.
      */
-    public static TempSeries of(Iterable<? extends TempSample> samples) {
-        Map<LocalDate, Temp> map = new HashMap<>();
-        for (TempSample sample : samples) {
-            map.put(sample.date(), sample.temp());
+    public static TempSeries of(Iterable<? extends Entry> entries) {
+        List<TempVector.Entry<LocalDate>> vector = new ArrayList<>();
+        for (Entry entry : entries) {
+            vector.add(entry.entry);
         }
-        return of(map);
+        return of(TempVector.of(vector));
     }
 
     /**
-     * Creates a series containing the supplied samples.
+     * Creates a series containing the supplied temperatures.
      */
     public static TempSeries of(Map<LocalDate, Temp> map) {
-        List<LocalDate> dates = new ArrayList<>(map.size());
-        dates.addAll(map.keySet());
-        dates.sort(Comparator.naturalOrder());
-        TempUnits units;
-        if (dates.isEmpty()) {
-            units = TempUnits.KELVIN;
-        } else {
-            units = map.get(dates.get(0)).units();
-        }
-        double[] temps = new double[dates.size()];
-        for (int i = 0; i < dates.size(); i++) {
-            temps[i] = map.get(dates.get(i)).to(units).doubleValue();
-        }
-        return new TempSeries(dates, temps, units);
+        return of(TempVector.of(map));
+    }
+
+    private static TempSeries of(TempVector<LocalDate> vector) {
+        return new TempSeries(vector.sortKeys());
     }
 }
