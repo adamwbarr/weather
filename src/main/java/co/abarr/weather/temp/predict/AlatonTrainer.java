@@ -25,14 +25,18 @@ public class AlatonTrainer implements TempTrainer {
     @Override
     public TempPredictor train(TempSeries train) {
         TempSeries mean = meanFor(train);
-        for (Map.Entry<Month, TempSeries> entry : train.groupByMonth().entrySet()) {
-            Map<Year, TempSeries> years = entry.getValue().groupByYear();
+        for (Map.Entry<Month, TempSeries> entry0 : train.groupByMonth().entrySet()) {
+            Map<Year, TempSeries> years = entry0.getValue().groupByYear();
+            double sum = 0;
+            for (Map.Entry<Year, TempSeries> entry1 : years.entrySet()) {
+                sum += entry1.getValue().qvar().get().doubleValue();
+            }
         }
         return null;
     }
 
     private static TempSeries meanFor(TempSeries train) {
-        LocalDate origin = train.dates().start();
+        LocalDate origin = train.get(0).date();
         DoubleMatrix X = new DoubleMatrix(train.size(), 4);
         DoubleMatrix y = new DoubleMatrix(train.size());
         for (int i = 0; i < train.size(); i++) {

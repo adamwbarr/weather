@@ -12,28 +12,20 @@ import java.util.function.Function;
 /**
  * A ordered list of temperature samples.
  * <p>
- * A series is guaranteed to contain at most one sample per date.
+ * A series is guaranteed to contain at most one sample per date, and all
+ * temperatures in the series are guaranteed to have the same units.
  * <p>
  * Created by adam on 01/12/2020.
  */
 public final class TempSeries extends AbstractList<TempSample> {
-    private final List<TempSample> samples;
+    private final List<LocalDate> dates;
+    private final double[] temps;
+    private final TempUnits units;
 
-    private TempSeries(List<TempSample> samples) {
-        this.samples = samples;
-    }
-
-    /**
-     * The date range spanned by this series.
-     * <p>
-     * An exception will be thrown if the series is empty.
-     */
-    public DateRange dates() {
-        if (isEmpty()) {
-            throw new UnsupportedOperationException();
-        } else {
-            return DateRange.of(samples.get(0).date(), samples.get(size() - 1).date().plusDays(1));
-        }
+    private TempSeries(List<LocalDate> dates, double[] temps, TempUnits units) {
+        this.dates = dates;
+        this.temps = temps;
+        this.units = units;
     }
 
     /**
@@ -41,7 +33,11 @@ public final class TempSeries extends AbstractList<TempSample> {
      */
     @Override
     public TempSample get(int index) {
-        return samples.get(index);
+        return TempSample.of(dates.get(index), tempAt(index));
+    }
+
+    private Temp tempAt(int index) {
+        return Temp.of(temps[index], units);
     }
 
     /**
@@ -49,7 +45,7 @@ public final class TempSeries extends AbstractList<TempSample> {
      */
     @Override
     public int size() {
-        return samples.size();
+        return dates.size();
     }
 
     /**
@@ -74,7 +70,7 @@ public final class TempSeries extends AbstractList<TempSample> {
         }
         Map<G, TempSeries> groups = new LinkedHashMap<>();
         for (Map.Entry<G, List<TempSample>> entry : lists.entrySet()) {
-            groups.put(entry.getKey(), new TempSeries(entry.getValue()));
+            groups.put(entry.getKey(), of(entry.getValue()));
         }
         return groups;
     }
@@ -85,11 +81,13 @@ public final class TempSeries extends AbstractList<TempSample> {
      * The resulting series will contain for the same dates as this one.
      */
     public TempSeries map(BiFunction<LocalDate, Temp, Temp> transform) {
-        List<TempSample> mapped = new ArrayList<>(size());
-        for (TempSample sample : samples) {
-            mapped.add(sample.temp(transform.apply(sample.date(), sample.temp())));
+        double[] mapped = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            LocalDate date = dates.get(i);
+            Temp temp = tempAt(i);
+            mapped[i] = transform.apply(date, temp).to(units).doubleValue();
         }
-        return new TempSeries(mapped);
+        return new TempSeries(dates, mapped, units);
     }
 
     /**
@@ -102,9 +100,9 @@ public final class TempSeries extends AbstractList<TempSample> {
         if (isEmpty()) {
             return Temp.zero(indexer.indexFor(Temp.kelvin(0)).units());
         } else {
-            Temp sum = indexer.indexFor(get(0).temp());
-            for (int i = 1; i < size(); i++) {
-                sum = sum.plus(indexer.indexFor(get(i).temp()));
+            Temp sum = indexer.indexFor(tempAt(0));
+            for (int i = 0; i < size(); i++) {
+                sum = sum.plus(indexer.indexFor(tempAt(i)));
             }
             return sum;
         }
@@ -114,44 +112,38 @@ public final class TempSeries extends AbstractList<TempSample> {
      * The sum of the series.
      */
     public Temp sum() {
-        if (isEmpty()) {
-            return Temp.kelvin(0);
-        } else {
-            Temp sum = get(0).temp();
-            for (int i = 1; i < size(); i++) {
-                sum = sum.plus(get(i).temp());
-            }
-            return sum;
+        double sum = 0;
+        for (int i = 0; i < size(); i++) {
+            sum += temps[i];
         }
+        return Temp.of(sum, units);
     }
 
     /**
-     * The mean of the series.
-     * <p>
-     * An exception will be thrown if the series is empty.
+     * The mean of the series, if there is one.
      */
-    public Temp mean() {
+    public Optional<Temp> mean() {
         if (isEmpty()) {
-            throw new UnsupportedOperationException();
+            return Optional.empty();
         } else {
-            return sum().divideBy(size());
+            return Optional.of(sum().divideBy(size()));
         }
     }
 
     /**
      * The quadratic variation of the series.
      * <p>
-     * An exception will be thrown if the series contains less than 2 elements.
+     * No result will be returned if there are fewer than two samples in the series.
      */
-    public Temp qvar() {
+    public Optional<Temp> qvar() {
         if (size() < 2) {
-            throw new UnsupportedOperationException();
+            return Optional.empty();
         } else {
-            Temp dsum = Temp.zero(get(0).temp().units());
+            double sum = 0;
             for (int i = 1; i < size(); i++) {
-
+                sum += Math.pow(temps[i] - temps[i - 1], 2);
             }
-            return null;
+            return Optional.of(Temp.of(sum, units));
         }
     }
 
@@ -166,11 +158,11 @@ public final class TempSeries extends AbstractList<TempSample> {
      * Creates a series from a factory function.
      */
     public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        List<TempSample> samples = new ArrayList<>();
+        Map<LocalDate, Temp> map = new HashMap<>();
         for (LocalDate date : dates.all()) {
-            samples.add(temp.apply(date).on(date));
+            map.put(date, temp.apply(date));
         }
-        return new TempSeries(samples);
+        return of(map);
     }
 
     /**
@@ -197,11 +189,19 @@ public final class TempSeries extends AbstractList<TempSample> {
      * Creates a series containing the supplied samples.
      */
     public static TempSeries of(Map<LocalDate, Temp> map) {
-        List<TempSample> samples = new ArrayList<>(map.size());
-        for (Map.Entry<LocalDate, Temp> entry : map.entrySet()) {
-            samples.add(entry.getValue().on(entry.getKey()));
+        List<LocalDate> dates = new ArrayList<>(map.size());
+        dates.addAll(map.keySet());
+        dates.sort(Comparator.naturalOrder());
+        TempUnits units;
+        if (dates.isEmpty()) {
+            units = TempUnits.KELVIN;
+        } else {
+            units = map.get(dates.get(0)).units();
         }
-        samples.sort(Comparator.comparing(TempSample::date));
-        return new TempSeries(samples);
+        double[] temps = new double[dates.size()];
+        for (int i = 0; i < dates.size(); i++) {
+            temps[i] = map.get(dates.get(i)).to(units).doubleValue();
+        }
+        return new TempSeries(dates, temps, units);
     }
 }

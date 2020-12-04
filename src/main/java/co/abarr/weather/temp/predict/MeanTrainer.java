@@ -8,10 +8,10 @@ import co.abarr.weather.temp.TempSeries;
  */
 class MeanTrainer implements TempTrainer {
     public TempPredictor train(TempSeries train) {
-        if (train.isEmpty()) {
+        Temp mean = train.mean().orElse(null);
+        if (mean == null) {
             throw new IllegalArgumentException("Empty training series");
         } else {
-            Temp mean = train.mean();
             return range -> TempSeries.of(range, date -> mean);
         }
     }

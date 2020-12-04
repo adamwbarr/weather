@@ -34,6 +34,16 @@ class TempSeriesTest {
     }
 
     @Test
+    void of_MismatchedUnits_ShouldConvertToSingleUnit() {
+        TempSeries series = TempSeries.of(
+            Temp.celsius(6).on(date1), Temp.fahrenheit(41).on(date2)
+        );
+        assertThat(series).containsExactly(
+            Temp.celsius(6).on(date1), Temp.celsius(5).on(date2)
+        );
+    }
+
+    @Test
     void size_OfEmptySeries_ShouldBeZero() {
         assertThat(TempSeries.empty()).hasSize(0);
     }
@@ -81,7 +91,7 @@ class TempSeriesTest {
 
     @Test
     void mean_OfEmptySeries_ShouldNotExist() {
-        assertThatThrownBy(() -> TempSeries.empty().mean()).isInstanceOf(UnsupportedOperationException.class);
+        assertThat(TempSeries.empty().mean()).isEmpty();
     }
 
     @Test
@@ -90,7 +100,22 @@ class TempSeriesTest {
             Temp.fahrenheit(40).on(date1),
             Temp.fahrenheit(41).on(date2)
         );
-        assertThat(series.mean()).isEqualTo(Temp.fahrenheit(40.5));
+        assertThat(series.mean()).contains(Temp.fahrenheit(40.5));
+    }
+
+    @Test
+    void qvar_OfEmptySeries_ShouldNotExist() {
+        assertThat(TempSeries.empty().qvar()).isEmpty();
+    }
+
+    @Test
+    void qvar_OfNonEmptySeries_ShouldBeCorrect() {
+        TempSeries series = TempSeries.of(
+            Temp.fahrenheit(40).on(date1),
+            Temp.fahrenheit(42).on(date2),
+            Temp.fahrenheit(44).on(date3)
+        );
+        assertThat(series.qvar()).contains(Temp.fahrenheit(8));
     }
 
     @Test
@@ -143,21 +168,6 @@ class TempSeriesTest {
                 Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02"))
             )
         );
-    }
-
-    @Test
-    void dates_OfEmptySeries_ShouldThrowException() {
-        assertThatThrownBy(() -> TempSeries.empty().dates()).isInstanceOf(UnsupportedOperationException.class);
-    }
-
-    @Test
-    void dates_OfNonEmptySeries_ShoulBeCorrect() {
-        TempSeries temps = TempSeries.of(
-            Temp.fahrenheit(66).on(LocalDate.parse("2019-01-01")),
-            Temp.fahrenheit(62).on(LocalDate.parse("2019-01-02")),
-            Temp.fahrenheit(60).on(LocalDate.parse("2020-01-01"))
-        );
-        assertThat(temps.dates()).isEqualTo(DateRange.of(LocalDate.parse("2019-01-01"), LocalDate.parse("2020-01-02")));
     }
 
     @Test
