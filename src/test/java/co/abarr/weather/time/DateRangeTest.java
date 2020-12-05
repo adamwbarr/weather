@@ -37,6 +37,18 @@ class DateRangeTest {
     }
 
     @Test
+    void yearMonth_OfSimpleMonth_ShouldBeCorrectRange() {
+        DateRange range = DateRange.yearMonth(2020, 1);
+        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-01-31")));
+    }
+
+    @Test
+    void yearMonth_OfLeapMonth_ShouldBeCorrectRange() {
+        DateRange range = DateRange.yearMonth(2012, 2);
+        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2012-02-01"), LocalDate.parse("2012-02-29")));
+    }
+
+    @Test
     void all_MultipleDates_ShouldReturnAllDates() {
         DateRange range = DateRange.of(date1, date3);
         assertThat(range.all()).containsExactly(date1, date2);

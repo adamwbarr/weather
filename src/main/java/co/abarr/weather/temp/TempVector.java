@@ -14,7 +14,7 @@ import java.util.function.Function;
  * <p>
  * Created by adam on 01/12/2020.
  */
-public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements TempUnits.Holder<TempVector<K>> {
+public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements TempUnits.Having<TempVector<K>> {
     private final List<K> keys;
     private final double[] values;
     private final TempUnits units;

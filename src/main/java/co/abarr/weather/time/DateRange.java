@@ -108,6 +108,14 @@ public final class DateRange {
     }
 
     /**
+     * Creates a new date range spanning a calendar month.
+     */
+    public static DateRange yearMonth(int year, int month) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        return of(start, start.withDayOfMonth(start.lengthOfMonth()));
+    }
+
+    /**
      * Creates a new date range.
      * <p>
      * An exception will be thrown if the start or end are null, or the start

@@ -17,7 +17,7 @@ import java.util.function.Function;
  * <p>
  * Created by adam on 03/12/2020.
  */
-public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUnits.Holder<TempSeries> {
+public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUnits.Having<TempSeries> {
     private final TempVector<LocalDate> temps;
 
     private TempSeries(TempVector<LocalDate> temps) {

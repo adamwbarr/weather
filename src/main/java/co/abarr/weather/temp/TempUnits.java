@@ -43,7 +43,7 @@ public enum TempUnits {
     /**
      * Helper interface for objects that have associated units.
      */
-    public interface Holder<T extends Holder<T>> {
+    public interface Having<T extends Having<T>> {
         /**
          * The units of this temperature.
          */
@@ -78,7 +78,7 @@ public enum TempUnits {
         /**
          * Converts this temperature to the units of the supplied temperature.
          */
-        default T toUnitsOf(Holder<?> o) {
+        default T toUnitsOf(Having<?> o) {
             return to(o.units());
         }
     }

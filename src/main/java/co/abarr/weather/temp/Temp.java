@@ -7,7 +7,7 @@ import java.util.Objects;
  * <p>
  * Created by adam on 30/11/2020.
  */
-public class Temp extends Number implements Comparable<Temp>, TempUnits.Holder<Temp> {
+public class Temp extends Number implements Comparable<Temp>, TempUnits.Having<Temp> {
     private final double value;
     private final TempUnits units;
 
