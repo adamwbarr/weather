@@ -255,7 +255,7 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
      * Creates a series from a factory function.
      */
     public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        return of(TempVector.of(dates.all(), temp));
+        return new TempSeries(TempVector.of(dates.all(), temp));
     }
 
     /**
@@ -273,17 +273,17 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
         for (Entry entry : entries) {
             vector.add(entry.entry);
         }
-        return of(TempVector.of(vector));
+        return ofPossiblyUnsorted(TempVector.of(vector));
     }
 
     /**
      * Creates a series containing the supplied temperatures.
      */
     public static TempSeries of(Map<LocalDate, Temp> map) {
-        return of(TempVector.of(map));
+        return ofPossiblyUnsorted(TempVector.of(map));
     }
 
-    private static TempSeries of(TempVector<LocalDate> vector) {
+    private static TempSeries ofPossiblyUnsorted(TempVector<LocalDate> vector) {
         return new TempSeries(vector.sortKeys());
     }
 }

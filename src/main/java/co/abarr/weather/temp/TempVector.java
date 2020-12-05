@@ -262,9 +262,12 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     public static <K, T> TempVector<K> of(Iterable<T> items, Function<T, K> key, Function<T, Temp> temp) {
         Map<K, Temp> map = new LinkedHashMap<>();
         for (T item : items) {
-            map.put(key.apply(item), temp.apply(item));
+            Temp tempOrNull = temp.apply(item);
+            if (tempOrNull != null) {
+                map.put(key.apply(item), tempOrNull);
+            }
         }
-        return of(map);
+        return ofGuaranteedNoNulls(map);
     }
 
     /**
@@ -290,20 +293,27 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
      * Creates a vector containing the supplied temperatures.
      */
     public static <K> TempVector<K> of(Map<K, Temp> map) {
-        map = removeNulls(map);
+        return ofGuaranteedNoNulls(removeNulls(map));
+    }
+
+    private static <K> TempVector<K> ofGuaranteedNoNulls(Map<K, Temp> map) {
+        TempUnits units = unitsFrom(map.values());
         List<K> keys = new ArrayList<>(map.size());
-        keys.addAll(map.keySet());
-        TempUnits units;
-        if (keys.isEmpty()) {
-            units = TempUnits.KELVIN;
-        } else {
-            units = map.get(keys.get(0)).units();
-        }
-        double[] temps = new double[keys.size()];
-        for (int i = 0; i < keys.size(); i++) {
-            temps[i] = map.get(keys.get(i)).to(units).doubleValue();
+        double[] temps = new double[map.size()];
+        int i = 0;
+        for (Map.Entry<K, Temp> entry : map.entrySet()) {
+            keys.add(entry.getKey());
+            temps[i++] = entry.getValue().to(units).doubleValue();
         }
         return new TempVector<>(keys, temps, units);
+    }
+
+    private static TempUnits unitsFrom(Collection<Temp> temps) {
+        if (temps.isEmpty()) {
+            return TempUnits.KELVIN;
+        } else {
+            return temps.iterator().next().units();
+        }
     }
 
     private static <K> Map<K, Temp> removeNulls(Map<K, Temp> map) {
