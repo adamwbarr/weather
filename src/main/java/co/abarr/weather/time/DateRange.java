@@ -2,10 +2,7 @@ package co.abarr.weather.time;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.AbstractList;
-import java.util.Objects;
-import java.util.Set;
-import java.util.Spliterator;
+import java.util.*;
 
 /**
  * A range of dates.
@@ -13,26 +10,24 @@ import java.util.Spliterator;
  * Created by adam on 01/12/2020.
  */
 public final class DateRange extends AbstractList<LocalDate> implements Set<LocalDate> {
-    private final LocalDate start;
-    private final int size;
+    private final List<LocalDate> dates;
 
-    private DateRange(LocalDate start, int size) {
-        this.start = Objects.requireNonNull(start);
-        this.size = size;
+    private DateRange(List<LocalDate> dates) {
+        this.dates = dates;
     }
 
     /**
-     * The start of the date range.
+     * The start of the date range (inclusive).
      */
     public LocalDate start() {
-        return start;
+        return get(0);
     }
 
     /**
      * Offsets the start of the date range.
      */
     public DateRange offsetStart(int offset) {
-        return of(start.plusDays(offset), end());
+        return of(start().plusDays(offset), end());
     }
 
     /**
@@ -43,10 +38,10 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
     }
 
     /**
-     * The end of the date range.
+     * The end of the date range (exclusive).
      */
     public LocalDate end() {
-        return start.plusDays(size);
+        return get(size() - 1).plusDays(1);
     }
 
     /**
@@ -60,7 +55,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      * Updates the end of the date range.
      */
     public DateRange end(LocalDate end) {
-        return of(start, end);
+        return of(start(), end);
     }
 
     /**
@@ -81,11 +76,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      */
     @Override
     public LocalDate get(int index) {
-        if (index < 0 || index >= size()) {
-            throw new IndexOutOfBoundsException(index);
-        } else {
-            return start.plusDays(index);
-        }
+        return dates.get(index);
     }
 
     @Override
@@ -98,20 +89,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      */
     @Override
     public int size() {
-        return size;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DateRange range = (DateRange) o;
-        return start.equals(range.start) && size == range.size;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(start, size);
+        return dates.size();
     }
 
     @Override
@@ -145,7 +123,13 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
             throw new IllegalArgumentException(String.format("Start (%s) is after end (%s)", start, end));
         } else {
             int size = (int) Math.max(1, ChronoUnit.DAYS.between(start, end));
-            return new DateRange(start, size);
+            List<LocalDate> dates = new ArrayList<>(size);
+            LocalDate date = start;
+            do {
+                dates.add(date);
+                date = date.plusDays(1);
+            } while (date.isBefore(end));
+            return new DateRange(dates);
         }
     }
 }
