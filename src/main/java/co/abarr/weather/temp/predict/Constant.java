@@ -18,6 +18,6 @@ class Constant implements TempPredictor {
 
     @Override
     public TempSeries predict(DateRange range) {
-        return TempSeries.of(range, date -> temp);
+        return TempSeries.of(range, (int i) -> temp);
     }
 }

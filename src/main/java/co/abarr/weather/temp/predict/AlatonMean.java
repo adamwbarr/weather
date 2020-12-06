@@ -39,10 +39,13 @@ class AlatonMean implements TempTrainer {
             C,
             Theta
         );
-        return range -> TempSeries.of(range, date -> {
-            int t = t(origin, date);
-            return Temp.of(A + B * t + C * Math.sin(W * t + Theta), units);
-        });
+        return range -> {
+            int t0 = t(origin, range.start());
+            return TempSeries.of(range, (int i) -> {
+                int t = t0 + i;
+                return Temp.of(A + B * t + C * Math.sin(W * t + Theta), units);
+            });
+        };
     }
 
     private static double[] fit(TempSeries observed, LocalDate origin) {

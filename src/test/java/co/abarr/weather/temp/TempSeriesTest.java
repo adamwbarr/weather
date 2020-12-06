@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static co.abarr.weather.temp.TempSeries.Entry;
@@ -45,6 +47,30 @@ class TempSeriesTest {
             TempSeries.entry(date1, Temp.celsius(6)),
             TempSeries.entry(date2, Temp.celsius(5))
         );
+    }
+
+    @Test
+    void of_DateRange_ShouldCreateCorrectVector() {
+        List<Temp> temps = Arrays.asList(Temp.celsius(5), Temp.celsius(6));
+        TempSeries series = TempSeries.of(DateRange.of(date1, date3), temps::get);
+        assertThat(series).containsExactly(
+            TempSeries.entry(date1, Temp.celsius(5)),
+            TempSeries.entry(date2, Temp.celsius(6))
+        );
+    }
+
+    @Test
+    void of_DateRangeWithNullTemps_ShouldCreateCorrectVector() {
+        List<Temp> temps = Arrays.asList(Temp.celsius(5), null);
+        TempSeries series = TempSeries.of(DateRange.of(date1, date3), temps::get);
+        assertThat(series).containsExactly(TempSeries.entry(date1, Temp.celsius(5)));
+    }
+
+    @Test
+    void of_DateRangeWithAllNullTemps_ShouldCreateEmptyVector() {
+        List<Temp> temps = Arrays.asList(null, null);
+        TempSeries series = TempSeries.of(DateRange.of(date1, date3), temps::get);
+        assertThat(series).isEmpty();
     }
 
     @Test

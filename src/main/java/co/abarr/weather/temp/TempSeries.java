@@ -8,6 +8,7 @@ import java.time.Year;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * A date keyed and ordered list of temperatures.
@@ -276,7 +277,14 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
      * Creates a series from a factory function.
      */
     public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        return new TempSeries(TempVector.of(dates.all(), temp));
+        return new TempSeries(TempVector.of(dates, temp));
+    }
+
+    /**
+     * Creates a series from a factory function.
+     */
+    public static TempSeries of(DateRange dates, IntFunction<Temp> temp) {
+        return new TempSeries(TempVector.of(dates, temp));
     }
 
     /**

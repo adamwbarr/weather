@@ -1,14 +1,18 @@
 package co.abarr.weather.time;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.temporal.ChronoUnit;
+import java.util.AbstractList;
 import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
 
 /**
+ * A range of dates.
+ * <p>
  * Created by adam on 01/12/2020.
  */
-public final class DateRange {
+public final class DateRange extends AbstractList<LocalDate> implements Set<LocalDate> {
     private final LocalDate start;
     private final LocalDate end;
 
@@ -63,30 +67,45 @@ public final class DateRange {
     }
 
     /**
-     * Whether this range contains the supplied date.
+     * Whether this range contains the supplied object.
      */
-    public boolean contains(LocalDate date) {
-        return !start.isAfter(date) && end.isAfter(date);
+    @Override
+    public boolean contains(Object o) {
+        if (o instanceof LocalDate) {
+            LocalDate date = (LocalDate) o;
+            return !start.isAfter(date) && end.isAfter(date);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get a date in the range.
+     */
+    @Override
+    public LocalDate get(int index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(index);
+        } else {
+            return start.plusDays(index);
+        }
+    }
+
+    @Override
+    public Spliterator<LocalDate> spliterator() {
+        return super.spliterator();
     }
 
     /**
      * The number of dates in the range.
      */
+    @Override
     public int size() {
-        return all().size();
-    }
-
-    /**
-     * All dates in the range from start (inclusive) to end (exclusive).
-     */
-    public List<LocalDate> all() {
-        List<LocalDate> dates = new ArrayList<>();
-        LocalDate date = start;
-        do {
-            dates.add(date);
-            date = date.plusDays(1);
-        } while (date.isBefore(end));
-        return dates;
+        if (start.equals(end)) {
+            return 1;
+        } else {
+            return (int) ChronoUnit.DAYS.between(start, end);
+        }
     }
 
     @Override

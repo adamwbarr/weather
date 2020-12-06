@@ -5,8 +5,6 @@ import co.abarr.weather.temp.TempSeries;
 import co.abarr.weather.time.DateRange;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -54,11 +52,7 @@ public class OrnsteinUhlenbeck implements TempPredictor {
             double previousResidual = entry.temp().doubleValue() - previous;
             path[i] = previous + alpha * previousResidual + noise;
         }
-        Map<LocalDate, Temp> map = new HashMap<>();
-        for (int i = 1; i < path.length; i++) {
-            map.put(mean.get(i).date(), Temp.of(path[i], mean.units()));
-        }
-        return TempSeries.of(map);
+        return TempSeries.of(range, (int i) -> Temp.of(path[i + 1], mean.units()));
     }
 
     /**

@@ -1,9 +1,12 @@
 package co.abarr.weather.temp;
 
+import co.abarr.weather.time.DateRange;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static co.abarr.weather.temp.TempVector.Entry;
@@ -45,6 +48,30 @@ class TempVectorTest {
         items.put(date2, null);
         TempVector<LocalDate> vector = TempVector.of(items, temp -> temp);
         assertThat(vector).containsExactly(TempVector.entry(date1, Temp.celsius(6)));
+    }
+
+    @Test
+    void of_DateRange_ShouldCreateCorrectVector() {
+        List<Temp> temps = Arrays.asList(Temp.celsius(5), Temp.celsius(6));
+        TempVector<LocalDate> vector = TempVector.of(DateRange.of(date1, date3), temps::get);
+        assertThat(vector).containsExactly(
+            TempVector.entry(date1, Temp.celsius(5)),
+            TempVector.entry(date2, Temp.celsius(6))
+        );
+    }
+
+    @Test
+    void of_DateRangeWithNullTemps_ShouldCreateCorrectVector() {
+        List<Temp> temps = Arrays.asList(Temp.celsius(5), null);
+        TempVector<LocalDate> vector = TempVector.of(DateRange.of(date1, date3), temps::get);
+        assertThat(vector).containsExactly(TempVector.entry(date1, Temp.celsius(5)));
+    }
+
+    @Test
+    void of_DateRangeWithAllNullTemps_ShouldCreateEmptyVector() {
+        List<Temp> temps = Arrays.asList(null, null);
+        TempVector<LocalDate> vector = TempVector.of(DateRange.of(date1, date3), temps::get);
+        assertThat(vector).isEmpty();
     }
 
     @Test

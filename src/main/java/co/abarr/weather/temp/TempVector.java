@@ -2,10 +2,12 @@ package co.abarr.weather.temp;
 
 import co.abarr.weather.time.DateRange;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * A keyed list of temperatures.
@@ -274,21 +276,79 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     }
 
     /**
-     * Creates a vector from a factory function.
+     * Creates a vector from a date range.
      */
-    public static <K, T> TempVector<K> of(Map<K, T> items, Function<T, Temp> temp) {
-        return of(items.entrySet(), Map.Entry::getKey, entry -> temp.apply(entry.getValue()));
+    public static <K> TempVector<K> of(List<K> keys, IntFunction<Temp> factory) {
+        if (keys instanceof DateRange) {
+            //Speed optimization for common code path
+            //noinspection unchecked
+            return (TempVector<K>) of((DateRange) keys, factory);
+        } else {
+            Map<K, Temp> map = new LinkedHashMap<>(keys.size());
+            for (int i = 0; i < keys.size(); i++) {
+                Temp tempOrNull = factory.apply(i);
+                if (tempOrNull != null) {
+                    map.put(keys.get(i), tempOrNull);
+                }
+            }
+            return ofGuaranteedNoNulls(map);
+        }
+    }
+
+    private static TempVector<LocalDate> of(DateRange range, IntFunction<Temp> factory) {
+        double[] values = new double[range.size()];
+        int nans = 0;
+        TempUnits units = null;
+        for (int i = 0; i < range.size(); i++) {
+            Temp temp = factory.apply(i);
+            double value;
+            if (temp == null) {
+                value = Double.NaN;
+                nans++;
+            } else {
+                if (units == null) {
+                    units = temp.units();
+                }
+                value = temp.to(units).doubleValue();
+            }
+            values[i] = value;
+        }
+        List<LocalDate> dates = range;
+        if(units == null) {
+            units = TempUnits.KELVIN;
+        }
+        if (nans > 0) {
+            dates = new ArrayList<>(values.length - nans);
+            double[] valuesNoNans = new double[values.length - nans];
+            int j = 0;
+            for (int i = 0; i < range.size(); i++) {
+                double value = values[i];
+                if (!Double.isNaN(value)) {
+                    dates.add(range.get(i));
+                    valuesNoNans[j++] = value;
+                }
+            }
+            values = valuesNoNans;
+        }
+        return new TempVector<>(dates, values, units);
     }
 
     /**
      * Creates a vector from a factory function.
      */
-    public static <K, T> TempVector<K> of(Iterable<T> items, Function<T, K> key, Function<T, Temp> temp) {
+    public static <K, T> TempVector<K> of(Map<K, T> items, Function<T, Temp> factory) {
+        return of(items.entrySet(), Map.Entry::getKey, entry -> factory.apply(entry.getValue()));
+    }
+
+    /**
+     * Creates a vector from a factory function.
+     */
+    public static <K, T> TempVector<K> of(Iterable<T> items, Function<T, K> key, Function<T, Temp> factory) {
         Map<K, Temp> map = new LinkedHashMap<>();
         for (T item : items) {
-            Temp tempOrNull = temp.apply(item);
-            if (tempOrNull != null) {
-                map.put(key.apply(item), tempOrNull);
+            Temp temp = factory.apply(item);
+            if (temp != null) {
+                map.put(key.apply(item), temp);
             }
         }
         return ofGuaranteedNoNulls(map);

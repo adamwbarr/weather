@@ -55,9 +55,9 @@ class DateRangeTest {
     }
 
     @Test
-    void all_MultipleDates_ShouldReturnAllDates() {
+    void of_MultipleDates_ShouldContainAllDates() {
         DateRange range = DateRange.of(date1, date3);
-        assertThat(range.all()).containsExactly(date1, date2);
+        assertThat(range).containsExactly(date1, date2);
     }
 
     @Test
@@ -79,9 +79,21 @@ class DateRangeTest {
     }
 
     @Test
+    void offsetStart_WithValidOffset_ShouldNotUpdateEnd() {
+        DateRange range = DateRange.of(date1, date2);
+        assertThat(range.offsetStart(-1).end()).isEqualTo(date2);
+    }
+
+    @Test
     void offsetEnd_WithNegativeOffset_ShouldUpdateEndCorrectly() {
         DateRange range = DateRange.of(date1, date2);
         assertThat(range.offsetEnd(1).end()).isEqualTo(date3);
+    }
+
+    @Test
+    void offsetEnd_WithValidOffset_ShouldNotUpdateStart() {
+        DateRange range = DateRange.of(date1, date2);
+        assertThat(range.offsetEnd(1).start()).isEqualTo(date1);
     }
 
     @Test
@@ -112,5 +124,29 @@ class DateRangeTest {
     void contains_DateAfterEnd_ShouldBeTrue() {
         DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
         assertThat(range.contains(LocalDate.parse("2020-02-08"))).isFalse();
+    }
+
+    @Test
+    void get_NegativeIndex_ShouldThrowException() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThatThrownBy(() -> range.get(-1)).isInstanceOf(IndexOutOfBoundsException.class);
+    }
+
+    @Test
+    void get_ValidIndex_ShouldReturnCorrectDate() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.get(1)).isEqualTo(LocalDate.parse("2020-02-05"));
+    }
+
+    @Test
+    void get_IndexOfSize_ShouldThrowException() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThatThrownBy(() -> range.get(3)).isInstanceOf(IndexOutOfBoundsException.class);
+    }
+
+    @Test
+    void get_IndexGreaterThanSize_ShouldThrowException() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThatThrownBy(() -> range.get(8)).isInstanceOf(IndexOutOfBoundsException.class);
     }
 }
