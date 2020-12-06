@@ -11,9 +11,11 @@ import java.util.*;
  */
 public final class DateRange extends AbstractList<LocalDate> implements Set<LocalDate> {
     private final List<LocalDate> dates;
+    private final LocalDate end;
 
-    private DateRange(List<LocalDate> dates) {
+    private DateRange(List<LocalDate> dates, LocalDate end) {
         this.dates = dates;
+        this.end = end;
     }
 
     /**
@@ -41,7 +43,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      * The end of the date range (exclusive).
      */
     public LocalDate end() {
-        return get(size() - 1).plusDays(1);
+        return end;
     }
 
     /**
@@ -129,7 +131,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
                 dates.add(date);
                 date = date.plusDays(1);
             } while (date.isBefore(end));
-            return new DateRange(dates);
+            return new DateRange(dates, date);
         }
     }
 }
