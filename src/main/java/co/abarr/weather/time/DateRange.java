@@ -14,14 +14,11 @@ import java.util.Spliterator;
  */
 public final class DateRange extends AbstractList<LocalDate> implements Set<LocalDate> {
     private final LocalDate start;
-    private final LocalDate end;
+    private final int size;
 
-    private DateRange(LocalDate start, LocalDate end) {
+    private DateRange(LocalDate start, int size) {
         this.start = Objects.requireNonNull(start);
-        this.end = Objects.requireNonNull(end);
-        if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Invalid date range: " + this);
-        }
+        this.size = size;
     }
 
     /**
@@ -35,35 +32,35 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      * Offsets the start of the date range.
      */
     public DateRange offsetStart(int offset) {
-        return new DateRange(start.plusDays(offset), end);
+        return of(start.plusDays(offset), end());
     }
 
     /**
      * Updates the start of the date range.
      */
     public DateRange start(LocalDate start) {
-        return new DateRange(start, end);
+        return of(start, end());
     }
 
     /**
      * The end of the date range.
      */
     public LocalDate end() {
-        return end;
+        return start.plusDays(size);
     }
 
     /**
      * Offsets the end of the date range.
      */
     public DateRange offsetEnd(int offset) {
-        return new DateRange(start, end.plusDays(offset));
+        return end(end().plusDays(offset));
     }
 
     /**
      * Updates the end of the date range.
      */
     public DateRange end(LocalDate end) {
-        return new DateRange(start, end);
+        return of(start, end);
     }
 
     /**
@@ -73,7 +70,7 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
     public boolean contains(Object o) {
         if (o instanceof LocalDate) {
             LocalDate date = (LocalDate) o;
-            return !start.isAfter(date) && end.isAfter(date);
+            return !start().isAfter(date) && end().isAfter(date);
         } else {
             return false;
         }
@@ -101,29 +98,25 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      */
     @Override
     public int size() {
-        if (start.equals(end)) {
-            return 1;
-        } else {
-            return (int) ChronoUnit.DAYS.between(start, end);
-        }
+        return size;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DateRange dateRange = (DateRange) o;
-        return start.equals(dateRange.start) && end.equals(dateRange.end);
+        DateRange range = (DateRange) o;
+        return start.equals(range.start) && size == range.size;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(start, end);
+        return Objects.hash(start, size);
     }
 
     @Override
     public String toString() {
-        return String.format("[%s->%s]", start, end);
+        return String.format("[%s->%s]", start(), end());
     }
 
     /**
@@ -148,6 +141,11 @@ public final class DateRange extends AbstractList<LocalDate> implements Set<Loca
      * date is after the end date.
      */
     public static DateRange of(LocalDate start, LocalDate end) {
-        return new DateRange(start, end);
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException(String.format("Start (%s) is after end (%s)", start, end));
+        } else {
+            int size = (int) Math.max(1, ChronoUnit.DAYS.between(start, end));
+            return new DateRange(start, size);
+        }
     }
 }
