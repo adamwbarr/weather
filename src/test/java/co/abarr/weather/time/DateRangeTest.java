@@ -39,13 +39,19 @@ class DateRangeTest {
     @Test
     void yearMonth_OfSimpleMonth_ShouldBeCorrectRange() {
         DateRange range = DateRange.yearMonth(2020, 1);
-        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-01-31")));
+        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-02-01")));
     }
 
     @Test
     void yearMonth_OfLeapMonth_ShouldBeCorrectRange() {
         DateRange range = DateRange.yearMonth(2012, 2);
-        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2012-02-01"), LocalDate.parse("2012-02-29")));
+        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2012-02-01"), LocalDate.parse("2012-03-01")));
+    }
+
+    @Test
+    void yearMonth_OfDecember_ShouldBeCorrectRange() {
+        DateRange range = DateRange.yearMonth(2012, 12);
+        assertThat(range).isEqualTo(DateRange.of(LocalDate.parse("2012-12-01"), LocalDate.parse("2013-01-01")));
     }
 
     @Test
@@ -76,5 +82,35 @@ class DateRangeTest {
     void offsetEnd_WithNegativeOffset_ShouldUpdateEndCorrectly() {
         DateRange range = DateRange.of(date1, date2);
         assertThat(range.offsetEnd(1).end()).isEqualTo(date3);
+    }
+
+    @Test
+    void contains_DateBeforeStart_ShouldBeFalse() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.contains(LocalDate.parse("2020-02-03"))).isFalse();
+    }
+
+    @Test
+    void contains_Start_ShouldBeTrue() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.contains(LocalDate.parse("2020-02-04"))).isTrue();
+    }
+
+    @Test
+    void contains_DateInsideRange_ShouldBeTrue() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.contains(LocalDate.parse("2020-02-05"))).isTrue();
+    }
+
+    @Test
+    void contains_End_ShouldBeFalse() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.contains(LocalDate.parse("2020-02-07"))).isFalse();
+    }
+
+    @Test
+    void contains_DateAfterEnd_ShouldBeTrue() {
+        DateRange range = DateRange.of(LocalDate.parse("2020-02-04"), LocalDate.parse("2020-02-07"));
+        assertThat(range.contains(LocalDate.parse("2020-02-08"))).isFalse();
     }
 }

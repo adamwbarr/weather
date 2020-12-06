@@ -63,6 +63,13 @@ public final class DateRange {
     }
 
     /**
+     * Whether this range contains the supplied date.
+     */
+    public boolean contains(LocalDate date) {
+        return !start.isAfter(date) && end.isAfter(date);
+    }
+
+    /**
      * The number of dates in the range.
      */
     public int size() {
@@ -112,7 +119,7 @@ public final class DateRange {
      */
     public static DateRange yearMonth(int year, int month) {
         LocalDate start = LocalDate.of(year, month, 1);
-        return of(start, start.withDayOfMonth(start.lengthOfMonth()));
+        return of(start, start.plusMonths(1));
     }
 
     /**

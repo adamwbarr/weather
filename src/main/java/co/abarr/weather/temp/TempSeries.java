@@ -68,6 +68,20 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
     }
 
     /**
+     * Filters down to entries before the supplied date (exclusive).
+     */
+    public TempSeries head(LocalDate to) {
+        return new TempSeries(temps.filter((date, temp) -> date.isBefore(to)));
+    }
+
+    /**
+     * Filters down to entries in a date range.
+     */
+    public TempSeries subSeries(DateRange range) {
+        return new TempSeries(temps.filter((date, temp) -> range.contains(date)));
+    }
+
+    /**
      * Transforms the entries in this series.
      * <p>
      * The resulting series will contain for the same dates as this one.
@@ -120,6 +134,13 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
      */
     public TempSeries round(int places) {
         return new TempSeries(temps.round(places));
+    }
+
+    /**
+     * The distribution of temperatures in this series.
+     */
+    public TempDistribution distribution() {
+        return temps.distribution();
     }
 
     /**

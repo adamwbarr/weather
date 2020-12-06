@@ -21,15 +21,15 @@ public class TempDistribution {
     }
 
     /**
-     * The probability of temperatures at or above some threshold.
+     * Where the supplied temperature fits in the distribution.
      */
-    public Probability pMoreThanOrEqualTo(Temp temp) {
+    public Fraction quantileOf(Temp temp) {
         double value = temp.to(units).doubleValue();
         int index = Arrays.binarySearch(temps, value);
         if (index < 0) {
             index = -index - 1;
         }
-        return Probability.of(1 - index / (double) temps.length);
+        return Fraction.of(index / (double) temps.length);
     }
 
     /**
@@ -66,6 +66,13 @@ public class TempDistribution {
         return result;
     }
 
+    /**
+     * The probability of temperatures at or above some threshold.
+     */
+    public Probability pMoreThanOrEqualTo(Temp temp) {
+        return Probability.of(1 - quantileOf(temp).doubleValue());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -82,7 +89,7 @@ public class TempDistribution {
     /**
      * Creates a distribution from a generator function.
      */
-    public static TempDistribution of(int n, Supplier<Temp> generator) {
+    public static TempDistribution generate(int n, Supplier<Temp> generator) {
         List<Temp> temps = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             temps.add(generator.get());

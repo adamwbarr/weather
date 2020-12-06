@@ -238,4 +238,22 @@ class TempVectorTest {
             TempVector.entry(date2, Temp.fahrenheit(3))
         ));
     }
+
+    @Test
+    void filter_ByPredicate_ShouldBeCorrect() {
+        TempVector<String> vector = TempVector.of(
+            TempVector.entry("a", Temp.fahrenheit(61)),
+            TempVector.entry("B", Temp.fahrenheit(62)),
+            TempVector.entry("c", Temp.fahrenheit(63)),
+            TempVector.entry("D", Temp.fahrenheit(64)),
+            TempVector.entry("E", Temp.fahrenheit(65))
+        ).filter(
+            (key, temp) -> key.equals(key.toUpperCase())
+        );
+        assertThat(vector).isEqualTo(TempVector.of(
+            TempVector.entry("B", Temp.fahrenheit(62)),
+            TempVector.entry("D", Temp.fahrenheit(64)),
+            TempVector.entry("E", Temp.fahrenheit(65))
+        ));
+    }
 }

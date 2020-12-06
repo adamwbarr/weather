@@ -134,4 +134,10 @@ class TempTest {
         Temp temp = Temp.kelvin(200);
         assertThat(temp.divideBy(2)).isEqualTo(Temp.kelvin(100));
     }
+
+    @Test
+    void round_To2dp_ShouldRoundCorrectly() {
+        Temp temp = Temp.celsius(2.678954322);
+        assertThat(temp.round(2)).isEqualTo(Temp.celsius(2.68));
+    }
 }

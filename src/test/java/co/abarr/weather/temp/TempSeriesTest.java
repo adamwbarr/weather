@@ -1,5 +1,6 @@
 package co.abarr.weather.temp;
 
+import co.abarr.weather.time.DateRange;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -170,6 +171,55 @@ class TempSeriesTest {
         assertThat(mapped).isEqualTo(TempSeries.of(
             TempSeries.entry(date1, Temp.fahrenheit(67)),
             TempSeries.entry(date2, Temp.fahrenheit(63))
+        ));
+    }
+
+    @Test
+    void head_OfEmptySeries_ShouldReturnSelf() {
+        TempSeries series = TempSeries.empty().head(LocalDate.parse("2020-01-04"));
+        assertThat(series).isEmpty();
+    }
+
+    @Test
+    void head_OfNonEmptySeries_ShouldBeCorrect() {
+        TempSeries series = TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(61)),
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-03"), Temp.fahrenheit(63)),
+            TempSeries.entry(LocalDate.parse("2020-01-04"), Temp.fahrenheit(64)),
+            TempSeries.entry(LocalDate.parse("2020-01-05"), Temp.fahrenheit(65))
+        ).head(
+            LocalDate.parse("2020-01-04")
+        );
+        assertThat(series).isEqualTo(TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(61)),
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-03"), Temp.fahrenheit(63))
+        ));
+    }
+
+    @Test
+    void subSeries_OfEmptySeries_ShouldReturnSelf() {
+        TempSeries series = TempSeries.empty().subSeries(
+            DateRange.of(LocalDate.parse("2020-01-02"), LocalDate.parse("2020-01-04"))
+        );
+        assertThat(series).isEmpty();
+    }
+
+    @Test
+    void subSeries_ByDateRange_ShouldBeCorrect() {
+        TempSeries series = TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.fahrenheit(61)),
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-03"), Temp.fahrenheit(63)),
+            TempSeries.entry(LocalDate.parse("2020-01-04"), Temp.fahrenheit(64)),
+            TempSeries.entry(LocalDate.parse("2020-01-05"), Temp.fahrenheit(65))
+        ).subSeries(
+            DateRange.of(LocalDate.parse("2020-01-02"), LocalDate.parse("2020-01-04"))
+        );
+        assertThat(series).isEqualTo(TempSeries.of(
+            TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.fahrenheit(62)),
+            TempSeries.entry(LocalDate.parse("2020-01-03"), Temp.fahrenheit(63))
         ));
     }
 

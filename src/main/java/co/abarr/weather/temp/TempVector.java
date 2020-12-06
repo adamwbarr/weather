@@ -1,9 +1,10 @@
 package co.abarr.weather.temp;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import co.abarr.weather.time.DateRange;
+
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 /**
@@ -93,6 +94,19 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     }
 
     /**
+     * Filters down to entries matching a predicate.
+     */
+    public TempVector<K> filter(BiPredicate<K, Temp> filter) {
+        List<Entry<K>> matching = new ArrayList<>(size());
+        for (Entry<K> entry : this) {
+            if (filter.test(entry.key, entry.temp)) {
+                matching.add(entry);
+            }
+        }
+        return of(matching);
+    }
+
+    /**
      * Sorts the the vector according to the natural order of the keys.
      */
     public TempVector<K> sortKeys() {
@@ -164,10 +178,20 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     public TempVector<K> round(int places) {
         double[] rounded = new double[size()];
         for (int i = 0; i < rounded.length; i++) {
-            BigDecimal decimal = BigDecimal.valueOf(values[i]).setScale(places, RoundingMode.HALF_UP);
-            rounded[i] = decimal.doubleValue();
+            rounded[i] = tempAt(i).round(places).doubleValue();
         }
         return new TempVector<>(keys, rounded, units);
+    }
+
+    /**
+     * The distribution of temperatures in this vector.
+     */
+    public TempDistribution distribution() {
+        List<Temp> temps = new ArrayList<>();
+        for (Entry<K> entry : this) {
+            temps.add(entry.temp);
+        }
+        return TempDistribution.of(temps);
     }
 
     private Temp tempAt(int index) {

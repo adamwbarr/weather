@@ -1,5 +1,7 @@
 package co.abarr.weather.temp;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
@@ -97,6 +99,14 @@ public class Temp extends Number implements Comparable<Temp>, TempUnits.Having<T
         } else {
             return of(value / scalar, units);
         }
+    }
+
+    /**
+     * Rounds this temperatures to some number of decimal places.
+     */
+    public Temp round(int places) {
+        BigDecimal decimal = BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP);
+        return new Temp(decimal.doubleValue(), units);
     }
 
     @Override

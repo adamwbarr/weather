@@ -1,17 +1,20 @@
 package co.abarr.weather.math;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * A number representing a fraction.
  * <p>
  * Created by adam on 04/12/2020.
  */
-public class Fraction extends Number implements Comparable<Fraction>{
+public class Fraction extends Number implements Comparable<Fraction> {
     private final double value;
 
     private Fraction(double value) {
         this.value = value;
-        if (Double.isNaN(value) || value < 0 || value > 1) {
-            throw new IllegalArgumentException("Invalid probability: " + this);
+        if (Double.isNaN(value)) {
+            throw new IllegalArgumentException("Invalid fraction: " + this);
         }
     }
 
@@ -56,6 +59,14 @@ public class Fraction extends Number implements Comparable<Fraction>{
     @Override
     public int compareTo(Fraction o) {
         return Double.compare(value, o.value);
+    }
+
+    /**
+     * Rounds this fraction to some number of decimal places.
+     */
+    public Fraction round(int places) {
+        BigDecimal decimal = BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP);
+        return new Fraction(decimal.doubleValue());
     }
 
     /**

@@ -17,6 +17,48 @@ class TempDistributionTest {
     }
 
     @Test
+    void quantileOf_BelowMin_ShouldReturnZero() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4), Temp.celsius(5));
+        assertThat(temps.quantileOf(Temp.celsius(0))).isEqualTo(Fraction.of(0));
+    }
+
+    @Test
+    void quantileOf_OfMin_ShouldReturnFraction() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4), Temp.celsius(5));
+        assertThat(temps.quantileOf(Temp.celsius(1))).isEqualTo(Fraction.of(0));
+    }
+
+    @Test
+    void quantileOf_OfMax_ShouldReturnCorrectValue() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4));
+        assertThat(temps.quantileOf(Temp.celsius(4))).isEqualTo(Fraction.of(0.75));
+    }
+
+    @Test
+    void quantileOf_AboveMax_ShouldReturnOne() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4), Temp.celsius(5));
+        assertThat(temps.quantileOf(Temp.celsius(6))).isEqualTo(Fraction.of(1));
+    }
+
+    @Test
+    void quantileOf_OfKnownValueInMiddleOfDistribution_ShouldReturnCorrectValue() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4), Temp.celsius(5));
+        assertThat(temps.quantileOf(Temp.celsius(3))).isEqualTo(Fraction.of(0.4));
+    }
+
+    @Test
+    void quantileOf_OfUnknownValueInMiddleOfDistribution_ShouldReturnCorrectValue() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(4), Temp.celsius(5));
+        assertThat(temps.quantileOf(Temp.celsius(3))).isEqualTo(Fraction.of(0.5));
+    }
+
+    @Test
+    void quantileOf_WhenUnsortedInput_ShouldReturnCorrectValue() {
+        TempDistribution temps = TempDistribution.of(Temp.celsius(4), Temp.celsius(2), Temp.celsius(5), Temp.celsius(1));
+        assertThat(temps.quantileOf(Temp.celsius(3))).isEqualTo(Fraction.of(0.5));
+    }
+
+    @Test
     void pMoreThanOrEqualTo_BelowMin_ShouldReturnOne() {
         TempDistribution temps = TempDistribution.of(Temp.celsius(1), Temp.celsius(2), Temp.celsius(3), Temp.celsius(4), Temp.celsius(5));
         assertThat(temps.pMoreThanOrEqualTo(Temp.celsius(0))).isEqualTo(Probability.of(1));
