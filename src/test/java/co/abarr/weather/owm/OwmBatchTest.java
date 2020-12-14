@@ -29,27 +29,27 @@ class OwmBatchTest {
     }
 
     @Test
-    void means_OfEmptyBatch_ShouldBeEmptySeries() {
-        TempSeries series = OwmBatch.empty().means();
+    void daily_OfEmptyBatch_ShouldBeEmptySeries() {
+        TempSeries series = OwmBatch.empty().daily();
         assertThat(series).isEmpty();
     }
 
     @Test
-    void means_OfBatchWithSingleRow_ShouldBeCorrect() {
+    void daily_OfBatchWithSingleRow_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100))
         );
-        TempSeries series = batch.means();
+        TempSeries series = batch.daily();
         assertThat(series).containsExactly(TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)));
     }
 
     @Test
-    void means_OfBatchWithMultipleDates_ShouldBeCorrect() {
+    void daily_OfBatchWithMultipleDates_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100)),
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-02T00:00:00Z"), Temp.kelvin(120))
         );
-        TempSeries series = batch.means();
+        TempSeries series = batch.daily();
         assertThat(series).containsExactly(
             TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)),
             TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.kelvin(120))
@@ -57,12 +57,12 @@ class OwmBatchTest {
     }
 
     @Test
-    void means_OfBatchWithMultipleRowsForDate_ShouldBeCorrect() {
+    void daily_OfBatchWithMultipleRowsForDate_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100)),
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T01:00:00Z"), Temp.kelvin(120))
         );
-        TempSeries series = batch.means();
+        TempSeries series = batch.daily();
         assertThat(series).containsExactly(
             TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(110))
         );

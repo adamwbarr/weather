@@ -2,7 +2,6 @@ package co.abarr.weather.owm;
 
 import co.abarr.weather.temp.Temp;
 import co.abarr.weather.temp.TempIndexer;
-import co.abarr.weather.temp.TempSeries;
 import co.abarr.weather.temp.predict.TempPredictor;
 import co.abarr.weather.temp.predict.TempTrainer;
 import co.abarr.weather.time.DateRange;
@@ -24,7 +23,7 @@ public class CentralParkIntegrationTests {
 
     @Test
     void alatonModel_WhenDataExists_ShouldProduceDifferentHddOnEachRun() {
-        TempPredictor model = TempTrainer.ALATON.train(FromCsv.readFromCentralParkCsv().means().toFahrenheit());
+        TempPredictor model = TempTrainer.ALATON.train(FromCsv.readFromCentralParkCsv().daily().toFahrenheit());
         DateRange range = DateRange.year(2020);
         Temp hdd1 = model.predict(range).apply(TempIndexer.HDD_65);
         Temp hdd2 = model.predict(range).apply(TempIndexer.HDD_65);

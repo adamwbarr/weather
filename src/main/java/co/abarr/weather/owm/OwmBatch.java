@@ -36,17 +36,17 @@ public class OwmBatch extends AbstractList<OwmRow> {
     }
 
     /**
-     * The series of mean temperatures for each date in the batch.
+     * The daily series of temperatures for each date in the batch.
      * <p>
-     * Note - this method will fail if the batch does not contain contiguous
-     * dates.
+     * The temperature for each date will be the midpoint between that day's
+     * high and low.
      */
-    public TempSeries means() {
+    public TempSeries daily() {
         Map<LocalDate, List<Temp>> dates = new HashMap<>();
         for (OwmRow row : this) {
             dates.computeIfAbsent(row.date(), date -> new ArrayList<>()).add(row.temp());
         }
-        return TempSeries.of(dates, temps -> TempBag.of(temps).mean().orElse(null));
+        return TempSeries.of(dates, temps -> TempBag.of(temps).mid().orElse(null));
     }
 
     /**

@@ -78,8 +78,8 @@ public class TempBag {
      */
     public Temp sum() {
         double sum = 0;
-        for (int i = 0; i < temps.length; i++) {
-            sum += temps[i];
+        for (double temp : temps) {
+            sum += temp;
         }
         return Temp.of(sum, units);
     }
@@ -92,6 +92,19 @@ public class TempBag {
             return Optional.empty();
         } else {
             return Optional.of(sum().divideBy(temps.length));
+        }
+    }
+
+    /**
+     * The mid point temperature, if there is one.
+     */
+    public Optional<Temp> mid() {
+        if (temps.length == 0) {
+            return Optional.empty();
+        } else {
+            double min = temps[0];
+            double max = temps[temps.length - 1];
+            return Optional.of(Temp.of(min + (max - min) / 2, units));
         }
     }
 

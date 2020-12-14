@@ -149,4 +149,15 @@ class TempBagTest {
         TempBag distribution = TempBag.of(Temp.fahrenheit(40), Temp.fahrenheit(41));
         assertThat(distribution.mean()).contains(Temp.fahrenheit(40.5));
     }
+
+    @Test
+    void mid_OfEmptyDistribution_ShouldNotExist() {
+        assertThat(TempBag.empty().mid()).isEmpty();
+    }
+
+    @Test
+    void mid_OfNonEmptyDistribution_ShouldBeCorrect() {
+        TempBag distribution = TempBag.of(Temp.fahrenheit(40), Temp.fahrenheit(41), Temp.fahrenheit(41));
+        assertThat(distribution.mid()).contains(Temp.fahrenheit(40.5));
+    }
 }
