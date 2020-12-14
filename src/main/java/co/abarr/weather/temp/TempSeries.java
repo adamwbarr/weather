@@ -120,7 +120,15 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
      * No result will be returned if there are fewer than two entries in the series.
      */
     public Optional<Temp> qvar() {
-        return temps.qvar();
+        if (size() < 2) {
+            return Optional.empty();
+        } else {
+            double sum = 0;
+            for (int i = 1; i < size(); i++) {
+                sum += Math.pow(temps.get(i).temp().doubleValue() - temps.get(i - 1).temp().doubleValue(), 2);
+            }
+            return Optional.of(Temp.of(sum / size(), units()));
+        }
     }
 
     /**
@@ -140,7 +148,7 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
     /**
      * The distribution of temperatures in this series.
      */
-    public TempDistribution distribution() {
+    public TempBag distribution() {
         return temps.distribution();
     }
 
@@ -276,15 +284,29 @@ public class TempSeries extends AbstractList<TempSeries.Entry> implements TempUn
     /**
      * Creates a series from a factory function.
      */
-    public static TempSeries of(DateRange dates, Function<LocalDate, Temp> temp) {
-        return new TempSeries(TempVector.of(dates, temp));
+    public static TempSeries of(DateRange dates, Function<LocalDate, Temp> factory) {
+        return new TempSeries(TempVector.of(dates, factory));
     }
 
     /**
      * Creates a series from a factory function.
      */
-    public static TempSeries of(DateRange dates, IntFunction<Temp> temp) {
-        return new TempSeries(TempVector.of(dates, temp));
+    public static TempSeries of(DateRange dates, IntFunction<Temp> factory) {
+        return new TempSeries(TempVector.of(dates, factory));
+    }
+
+    /**
+     * Creates a series from a factory function.
+     */
+    public static <T> TempSeries of(Map<LocalDate, T> items, Function<T, Temp> factory) {
+        return ofPossiblyUnsorted(TempVector.of(items, factory));
+    }
+
+    /**
+     * Creates a series from a factory function.
+     */
+    public static <T> TempSeries of(Iterable<T> items, Function<T, LocalDate> key, Function<T, Temp> factory) {
+        return ofPossiblyUnsorted(TempVector.of(items, key, factory));
     }
 
     /**

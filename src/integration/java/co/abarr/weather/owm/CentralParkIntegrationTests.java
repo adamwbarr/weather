@@ -24,7 +24,7 @@ public class CentralParkIntegrationTests {
 
     @Test
     void alatonModel_WhenDataExists_ShouldProduceDifferentHddOnEachRun() {
-        TempPredictor model = TempTrainer.ALATON.train(FromCsv.readFromCentralParkCsv().maxs().toFahrenheit());
+        TempPredictor model = TempTrainer.ALATON.train(FromCsv.readFromCentralParkCsv().means().toFahrenheit());
         DateRange range = DateRange.year(2020);
         Temp hdd1 = model.predict(range).apply(TempIndexer.HDD_65);
         Temp hdd2 = model.predict(range).apply(TempIndexer.HDD_65);

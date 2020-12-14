@@ -7,15 +7,15 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * A temperature distribution.
+ * A collection of temperatures.
  * <p>
  * Created by adam on 04/12/2020.
  */
-public class TempDistribution {
+public class TempBag {
     private final double[] temps;
     private final TempUnits units;
 
-    private TempDistribution(double[] temps, TempUnits units) {
+    private TempBag(double[] temps, TempUnits units) {
         this.temps = temps;
         this.units = units;
     }
@@ -73,11 +73,33 @@ public class TempDistribution {
         return Probability.of(1 - quantileOf(temp).doubleValue());
     }
 
+    /**
+     * The sum of the temperatures.
+     */
+    public Temp sum() {
+        double sum = 0;
+        for (int i = 0; i < temps.length; i++) {
+            sum += temps[i];
+        }
+        return Temp.of(sum, units);
+    }
+
+    /**
+     * The mean temperature, if there is one.
+     */
+    public Optional<Temp> mean() {
+        if (temps.length == 0) {
+            return Optional.empty();
+        } else {
+            return Optional.of(sum().divideBy(temps.length));
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TempDistribution distribution = (TempDistribution) o;
+        TempBag distribution = (TempBag) o;
         return Arrays.equals(temps, distribution.temps) && units == distribution.units;
     }
 
@@ -87,9 +109,16 @@ public class TempDistribution {
     }
 
     /**
-     * Creates a distribution from a generator function.
+     * A bag containing no temperatures.
      */
-    public static TempDistribution generate(int n, Supplier<Temp> generator) {
+    public static TempBag empty() {
+        return of();
+    }
+
+    /**
+     * Creates a bag from a generator function.
+     */
+    public static TempBag generate(int n, Supplier<Temp> generator) {
         List<Temp> temps = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             temps.add(generator.get());
@@ -98,16 +127,16 @@ public class TempDistribution {
     }
 
     /**
-     * Creates a distribution from the supplied temperatures.
+     * Creates a bag from the supplied temperatures.
      */
-    public static TempDistribution of(Temp... temps) {
+    public static TempBag of(Temp... temps) {
         return of(Arrays.asList(temps));
     }
 
     /**
-     * Creates a distribution from the supplied temperatures.
+     * Creates a bag containing the supplied temperatures.
      */
-    public static TempDistribution of(Iterable<Temp> temps) {
+    public static TempBag of(Iterable<Temp> temps) {
         List<Temp> list = new ArrayList<>();
         TempUnits units = unitsFor(temps);
         for (Temp temp : temps) {
@@ -118,7 +147,7 @@ public class TempDistribution {
             array[i] = list.get(i).doubleValue();
         }
         Arrays.sort(array);
-        return new TempDistribution(array, units);
+        return new TempBag(array, units);
     }
 
     private static TempUnits unitsFor(Iterable<Temp> temps) {

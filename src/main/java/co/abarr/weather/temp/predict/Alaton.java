@@ -85,18 +85,4 @@ class Alaton implements TempTrainer {
         }
         return result;
     }
-
-    public static void main(String[] args) {
-        Alaton alaton = new Alaton();
-        TempSeries observed = OwmBatch.centralParkCsv().maxs().toCelsius();
-        TempPredictor predictor = alaton.train(observed);
-        long t0 = System.currentTimeMillis();
-        for (int i = 0; i < 20000; i++) {
-            TempSeries predicted = predictor.predict(DateRange.year(2020));
-            if (i % 10 == 0) {
-                long d = System.currentTimeMillis() - t0;
-                System.out.printf("Total %dms for %d, mean %.2fms\n", d, i, (d / (double) i));
-            }
-        }
-    }
 }

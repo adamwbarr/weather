@@ -1,6 +1,7 @@
 package co.abarr.weather.owm;
 
 import co.abarr.weather.temp.Temp;
+import co.abarr.weather.temp.TempBag;
 import co.abarr.weather.temp.TempSeries;
 
 import java.time.LocalDate;
@@ -35,25 +36,17 @@ public class OwmBatch extends AbstractList<OwmRow> {
     }
 
     /**
-     * The series of max temperatures for each date in the batch.
+     * The series of mean temperatures for each date in the batch.
      * <p>
      * Note - this method will fail if the batch does not contain contiguous
      * dates.
      */
-    public TempSeries maxs() {
-        Map<LocalDate, Temp> maxs = new HashMap<>();
+    public TempSeries means() {
+        Map<LocalDate, List<Temp>> dates = new HashMap<>();
         for (OwmRow row : this) {
-            maxs.merge(row.date(), row.temp(), OwmBatch::max);
+            dates.computeIfAbsent(row.date(), date -> new ArrayList<>()).add(row.temp());
         }
-        return TempSeries.of(maxs);
-    }
-
-    private static Temp max(Temp x, Temp y) {
-        if (x.compareTo(y) < 0) {
-            return y;
-        } else {
-            return x;
-        }
+        return TempSeries.of(dates, temps -> TempBag.of(temps).mean().orElse(null));
     }
 
     /**

@@ -153,22 +153,6 @@ class TempVectorTest {
     }
 
     @Test
-    void qvar_OfEmptyVector_ShouldNotExist() {
-        assertThat(TempVector.empty().qvar()).isEmpty();
-    }
-
-    @Test
-    void qvar_OfNonEmptyVector_ShouldBeCorrect() {
-        TempVector<LocalDate> vector = TempVector.of(
-            TempVector.entry(date1, Temp.fahrenheit(40)),
-            TempVector.entry(date2, Temp.fahrenheit(42)),
-            TempVector.entry(date3, Temp.fahrenheit(44)),
-            TempVector.entry(date4, Temp.fahrenheit(44))
-        );
-        assertThat(vector.qvar()).contains(Temp.fahrenheit(2));
-    }
-
-    @Test
     void map_OfEmptyVector_ShouldBeEmptyVector() {
         TempVector<LocalDate> vector = TempVector.<LocalDate>empty().map((date, temp) -> temp.toKelvin());
         assertThat(vector).isEqualTo(TempVector.empty());

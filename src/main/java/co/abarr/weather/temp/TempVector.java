@@ -139,22 +139,14 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
      * The sum of the vector.
      */
     public Temp sum() {
-        double sum = 0;
-        for (int i = 0; i < size(); i++) {
-            sum += values[i];
-        }
-        return Temp.of(sum, units);
+        return distribution().sum();
     }
 
     /**
      * The mean of the vector, if there is one.
      */
     public Optional<Temp> mean() {
-        if (isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(sum().divideBy(size()));
-        }
+        return distribution().mean();
     }
 
     /**
@@ -188,12 +180,12 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
     /**
      * The distribution of temperatures in this vector.
      */
-    public TempDistribution distribution() {
+    public TempBag distribution() {
         List<Temp> temps = new ArrayList<>();
         for (Entry<K> entry : this) {
             temps.add(entry.temp);
         }
-        return TempDistribution.of(temps);
+        return TempBag.of(temps);
     }
 
     private Temp tempAt(int index) {
@@ -314,7 +306,7 @@ public class TempVector<K> extends AbstractList<TempVector.Entry<K>> implements 
             values[i] = value;
         }
         List<LocalDate> dates = range;
-        if(units == null) {
+        if (units == null) {
             units = TempUnits.KELVIN;
         }
         if (nans > 0) {

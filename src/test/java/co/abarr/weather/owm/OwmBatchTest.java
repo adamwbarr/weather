@@ -29,27 +29,27 @@ class OwmBatchTest {
     }
 
     @Test
-    void max_OfEmptyBatch_ShouldBeEmptySeries() {
-        TempSeries series = OwmBatch.empty().maxs();
+    void means_OfEmptyBatch_ShouldBeEmptySeries() {
+        TempSeries series = OwmBatch.empty().means();
         assertThat(series).isEmpty();
     }
 
     @Test
-    void max_OfBatchWithSingleRow_ShouldBeCorrect() {
+    void means_OfBatchWithSingleRow_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100))
         );
-        TempSeries series = batch.maxs();
+        TempSeries series = batch.means();
         assertThat(series).containsExactly(TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)));
     }
 
     @Test
-    void max_OfBatchWithMultipleDates_ShouldBeCorrect() {
+    void means_OfBatchWithMultipleDates_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100)),
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-02T00:00:00Z"), Temp.kelvin(120))
         );
-        TempSeries series = batch.maxs();
+        TempSeries series = batch.means();
         assertThat(series).containsExactly(
             TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(100)),
             TempSeries.entry(LocalDate.parse("2020-01-02"), Temp.kelvin(120))
@@ -57,14 +57,14 @@ class OwmBatchTest {
     }
 
     @Test
-    void max_OfBatchWithMultipleRowsForDate_ShouldBeCorrect() {
+    void means_OfBatchWithMultipleRowsForDate_ShouldBeCorrect() {
         OwmBatch batch = OwmBatch.of(
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T00:00:00Z"), Temp.kelvin(100)),
             OwmRow.of(CENTRAL_PARK, Instant.parse("2020-01-01T01:00:00Z"), Temp.kelvin(120))
         );
-        TempSeries series = batch.maxs();
+        TempSeries series = batch.means();
         assertThat(series).containsExactly(
-            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(120))
+            TempSeries.entry(LocalDate.parse("2020-01-01"), Temp.kelvin(110))
         );
     }
 }
