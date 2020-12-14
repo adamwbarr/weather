@@ -10,7 +10,7 @@ threshold (generally 65F in the US). So, for example, if the temperature was 50F
 sum of this value over all days in the month.
 
 See [here](https://www.investopedia.com/terms/h/heatingdegreeday.asp) for a more detailed explanation, or 
-`co.abarr.weather.temp.Hdd` for the implementation.
+[`co.abarr.weather.temp.Hdd`](src/main/java/co/abarr/weather/temp/Hdd.java) for the implementation.
 
 ### Temperature Models
 
@@ -29,7 +29,7 @@ The basic idea of this model is:
    residuals. This is a mean-reverting model, where the temperature updates randomly each day, but over time reverts to
    the long-term average (ie the expectation from step 1).
    
-See `co.abarr.weather.temp.predict.Alaton`.
+See [`co.abarr.weather.temp.predict.Alaton`](src/main/java/co/abarr/weather/temp/predict/Alaton.java).
 
 ### Data
 
@@ -37,7 +37,7 @@ Also included is a parser for historic bulk downloads from [OpenWeather](https:/
 These are CSVs that include a bunch of different weather metrics for a given location: temperature, rainfall, humidity
 etc, sampled at half-hourly intervals. Only temperature fields are loaded currently.
 
-See `co.abarr.weather.owm.FromCsv`.
+See [`co.abarr.weather.owm.FromCsv`](src/main/java/co/abarr/weather/owm/FromCsv.java).
 
 ## Build
 
