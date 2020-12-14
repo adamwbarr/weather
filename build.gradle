@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id "com.adarshr.test-logger" version "2.1.1"
 }
 
 group "co.abarr"
@@ -19,6 +20,10 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.0"
 }
 
+test {
+    useJUnitPlatform()
+}
+
 sourceSets {
     integration {
         java.srcDir "src/integration/java"
@@ -31,14 +36,18 @@ sourceSets {
 configurations {
     integrationImplementation.extendsFrom testImplementation
     integrationRuntime.extendsFrom testRuntime
+    integrationRuntimeOnly.extendsFrom testRuntimeOnly
 }
+
 task integrationTest(type: Test) {
+    description = "Runs integration tests."
+    group = "verification"
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
 }
 
 check.dependsOn integrationTest
 
-test {
+integrationTest {
     useJUnitPlatform()
 }

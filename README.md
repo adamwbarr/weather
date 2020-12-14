@@ -9,7 +9,8 @@ index values. The HDD for any particular day is the number of degrees that the t
 threshold (generally 65F in the US). So, for example, if the temperature was 50F, the HDD is 15F. The monthly HDD is the
 sum of this value over all days in the month.
 
-See [here](https://www.investopedia.com/terms/h/heatingdegreeday.asp) for a more detailed explanation, or `co.abarr.weather.temp.Hdd` for an implementation.
+See [here](https://www.investopedia.com/terms/h/heatingdegreeday.asp) for a more detailed explanation, or 
+`co.abarr.weather.temp.Hdd` for the implementation.
 
 ### Temperature Models
 
@@ -26,6 +27,21 @@ The basic idea of this model is:
 2. Calculate the residual temperatures by subtracting the expected from observed temperature on each day,
 3. Fit an [Ornstein-Uhlenbeck](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process) model to these 
    residuals. This is a mean-reverting model, where the temperature updates randomly each day, but over time reverts to
-   the long-term average.
+   the long-term average (ie the expectation from step 1).
    
 See `co.abarr.weather.temp.predict.Alaton`.
+
+### Data
+
+Also included is a parser for historic bulk downloads from [OpenWeather](https://openweathermap.org/history-bulk). 
+These are CSVs that include a bunch of different weather metrics for a given location: temperature, rainfall, humidity
+etc, sampled at half-hourly intervals. Only temperature fields are loaded currently.
+
+See `co.abarr.weather.owm.FromCsv`.
+
+## Build
+
+The project is built using Gradle. To compile the code and run all unit tests:
+```
+$ gradle test
+```
